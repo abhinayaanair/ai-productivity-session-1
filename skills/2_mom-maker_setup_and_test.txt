@@ -1,0 +1,30 @@
+MOM-MAKER: build it live in Gemini
+==================================
+
+OPTION A: create it by hand (what you demo on screen)
+1. Go to gemini.google.com and sign in.
+2. Sidebar > Customize (click "More" first if you don't see it) > Skills.
+3. Create > Create manually.
+4. Name: mom-maker   (lowercase with hyphens; Gemini fixes the format if needed)
+5. Description: Turns rough meeting notes into clean minutes of meeting with an action table. Use whenever I paste meeting notes and ask for minutes or a MoM.
+6. Instructions: copy everything below the second "---" line in mom-maker/SKILL.md.
+7. Click Create.
+
+OPTION B: upload the ready-made file (backup if time is short)
+Customize > Skills > Create > Upload > pick the "mom-maker" folder (SKILL.md inside it) > Open > Create.
+
+USE IT
+In a new chat, type /mom-maker and paste the notes below. (Google says "@" is replacing "/" as the shortcut. If "/" doesn't work, try "@".)
+Gemini may also apply the skill automatically when you paste meeting notes.
+
+SAMPLE NOTES TO TEST IT (made-up data)
+review mtg 20 nov – ravi said cable delivery slipping, maybe 1st wk dec, vendor not confirmed. meena to chase vendor. land parcel 14 still pending NOC, legal checking, ETA unclear. safety – 2 near misses last wk at block C, need toolbox talk, suresh. budget: civil overrun approx 6%, finance wants note by next mon. next mtg 27th
+
+WHAT GOOD LOOKS LIKE
+- Meena, Legal and Suresh show "Not stated" as the due date
+- Every row has a Source quote from the notes
+- "Please check" asks who writes the budget note
+
+CHECK BEFORE 2 PM
+- Try this on a FREE personal Google account. Google's pages don't clearly say whether skills need a paid Google AI plan.
+- If skills aren't available on free accounts, participants can still paste the instructions at the start of a normal chat, or save them in a ChatGPT Project / Copilot agent if their plan allows.

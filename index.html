@@ -1,0 +1,1394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Context and Prompting – Session 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --outer: #050608; --bg: #0B0D12; --bg2: #101319; --card: #14171F; --line: #252A36;
+    --text: #F3F4F7; --text2: #C9CED9; --muted: #8A91A3;
+    --blue: #5B8CFF; --cyan: #9DB8FF; --yellow: #F5C26B; --amber: #F2A65A;
+    --red: #F27272; --red-dk: #7A2E35; --green: #4CC38A;
+    --panel: #090B10; --panel2: #10131A; --panel3: #1C2029; --dash: #3A4150; --goodtext: #D3F2E2;
+    --glow1: #122046; --glow2: #0B0D12; --funnel1: #24345E; --funnel2: #3F66D9;
+    --paper: #F7F8FA; --paper-ink: #151922; --paper-head: #E7EAF0; --paper-line: #E6E8EE;
+    --logo-filter: invert(1); --logo-blend: screen; --shadow: none;
+  }
+  :root[data-theme="light"] {
+    --outer: #E4E7ED; --bg: #FFFFFF; --bg2: #F6F7F9; --card: #F6F7FA; --line: #E3E6EC;
+    --text: #0E1116; --text2: #343A46; --muted: #6B7280;
+    --blue: #2F5BEA; --cyan: #2F5BEA; --yellow: #A86A00; --amber: #B85C0A;
+    --red: #D23B3B; --red-dk: #9B2C2C; --green: #17844F;
+    --panel: #F3F5F8; --panel2: #EEF0F4; --panel3: #E8EBF0; --dash: #C3C9D4; --goodtext: #0F4F33;
+    --glow1: #EEF3FF; --glow2: #FFFFFF; --funnel1: #6C8CF0; --funnel2: #2F5BEA;
+    --paper: #FFFFFF; --paper-ink: #151922; --paper-head: #EEF0F4; --paper-line: #E6E8EE;
+    --logo-filter: none; --logo-blend: multiply; --shadow: 0 1px 2px rgba(14,17,22,.05), 0 4px 14px rgba(14,17,22,.05);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--outer); color: var(--text); font-family: Poppins, system-ui, sans-serif; overflow: hidden; }
+
+  /* 16:9 stage scaled to fit */
+  #viewport { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+  #stage { width: 1280px; height: 720px; position: relative; transform-origin: center center; flex: none; }
+  .slide {
+    position: absolute; inset: 0; padding: 56px 70px 70px;
+    background: radial-gradient(1200px 600px at 85% -10%, var(--glow1) 0%, transparent 60%), radial-gradient(900px 500px at 0% 110%, var(--glow2) 0%, transparent 60%), var(--bg);
+    border-radius: 14px; overflow: hidden;
+    opacity: 0; visibility: hidden; transition: opacity .35s ease;
+  }
+  .slide.active { opacity: 1; visibility: visible; }
+
+  /* chrome */
+  .foot { position: absolute; left: 70px; right: 70px; bottom: 22px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted); letter-spacing: .5px; }
+  .foot .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: 3px; }
+  .foot .brand img { width: 20px; height: 20px; filter: var(--logo-filter); mix-blend-mode: var(--logo-blend); }
+  .tag { display: inline-block; font-size: 13px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: var(--cyan); margin-bottom: 10px; }
+  h1 { font-size: 44px; line-height: 1.12; margin: 0 0 18px; font-weight: 700; }
+  h1.huge { font-size: 64px; }
+  .rule { height: 3px; background: var(--blue); border-radius: 2px; margin: 0 0 30px; }
+  p { margin: 0 0 14px; }
+  .lead { font-size: 24px; line-height: 1.45; color: var(--text2); }
+  .muted { color: var(--muted); }
+  .accent { color: var(--blue); }
+  .cyan { color: var(--cyan); }
+  .yellow { color: var(--yellow); }
+  .red { color: var(--red); }
+  .green { color: var(--green); }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; align-items: center; height: calc(100% - 110px); }
+  .imgbox { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--panel); height: 430px; display: flex; align-items: center; justify-content: center; }
+  .imgbox img { width: 100%; height: 100%; object-fit: cover; }
+  .imgbox.contain img { object-fit: contain; background: #fff; }
+  .clue-label { font-size: 26px; font-weight: 700; color: var(--blue); margin-bottom: 14px; }
+  .clue-text { font-size: 40px; font-weight: 700; line-height: 1.25; margin-bottom: 22px; }
+  .mono-note { font-family: "JetBrains Mono", monospace; font-size: 15px; background: var(--panel3); color: var(--text2); padding: 8px 12px; border-radius: 6px; display: inline-block; }
+
+  /* activity badge */
+  .act { display: inline-flex; align-items: center; gap: 10px; background: color-mix(in srgb, var(--yellow) 12%, transparent); border: 1px solid color-mix(in srgb, var(--yellow) 45%, transparent); color: var(--yellow); font-weight: 600; font-size: 14px; letter-spacing: 1.5px; text-transform: uppercase; padding: 6px 14px; border-radius: 999px; margin-bottom: 14px; }
+  .act::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); box-shadow: 0 0 10px var(--yellow); }
+
+  .ask { margin-top: 18px; background: var(--card); border-left: 4px solid var(--yellow); padding: 14px 18px; border-radius: 8px; font-size: 19px; line-height: 1.45; }
+
+  /* timer */
+  .timer { display: inline-flex; align-items: center; gap: 10px; font-family: "JetBrains Mono", monospace; font-size: 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; cursor: pointer; user-select: none; color: var(--text); }
+  .timer::before { content: "▶"; font-size: 13px; color: var(--cyan); }
+  .timer.running::before { content: "❚❚"; }
+  .timer.done { border-color: var(--red); color: var(--red); animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: .55; } }
+
+  /* fragments */
+  .frag { opacity: 0; transform: translateY(10px); transition: opacity .35s ease, transform .35s ease; }
+  .frag.on { opacity: 1; transform: none; }
+  .stack { position: relative; }
+  .stack > * { position: absolute; inset: 0; }
+
+  /* cards */
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .grid5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px 20px; }
+  .card h3 { margin: 0 0 8px; font-size: 21px; }
+  .card .q { color: var(--muted); font-size: 15px; line-height: 1.4; margin-bottom: 12px; }
+  .card .ex { font-size: 14px; line-height: 1.45; color: var(--text2); background: var(--panel2); border-radius: 8px; padding: 10px 12px; }
+  .letter { width: 46px; height: 46px; border-radius: 10px; background: var(--blue); color: #fff; font-weight: 800; font-size: 22px; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+
+  .weak { font-family: "JetBrains Mono", monospace; font-size: 18px; background: var(--panel); border: 1px dashed var(--dash); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; color: var(--text); }
+  .miss { font-size: 14px; color: var(--red); font-weight: 600; margin-bottom: 8px; letter-spacing: .3px; }
+  .better { font-size: 14px; line-height: 1.5; background: color-mix(in srgb, var(--green) 8%, transparent); border: 1px solid color-mix(in srgb, var(--green) 35%, transparent); border-radius: 10px; padding: 12px 14px; color: var(--goodtext); }
+  .better b { color: var(--green); }
+
+  /* funnel */
+  .funnel { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+  .funnel div { color: #fff; background: linear-gradient(90deg, var(--funnel1), var(--funnel2)); border-radius: 8px; padding: 12px 18px; text-align: center; font-size: 17px; font-weight: 500; }
+  .funnel div span { display: block; font-size: 12px; color: rgba(255,255,255,.72); font-weight: 400; letter-spacing: 1px; text-transform: uppercase; }
+
+  table.map { width: 100%; border-collapse: collapse; font-size: 18px; }
+  table.map th { text-align: left; color: var(--muted); font-weight: 600; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; padding: 0 14px 10px; border-bottom: 2px solid var(--blue); }
+  table.map td { padding: 13px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.map td:first-child { color: var(--cyan); font-weight: 600; width: 30%; }
+  table.map td:last-child { font-family: "JetBrains Mono", monospace; font-size: 15.5px; color: var(--text2); }
+
+  /* prompt stepper */
+  .prompt { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; font-family: "JetBrains Mono", monospace; font-size: 15.5px; line-height: 1.6; min-height: 380px; }
+  .prompt .pl { display: block; margin-bottom: 8px; }
+  .prompt .pl b { font-family: Poppins, sans-serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; background: var(--blue); color: #fff; margin-right: 8px; vertical-align: 2px; }
+  .out { background: var(--paper); color: var(--paper-ink); border-radius: 12px; padding: 18px 20px; font-size: 14.5px; line-height: 1.55; white-space: pre-line; }
+  .out .verdict { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; margin-bottom: 10px; }
+  .v-bad { background: #fde3e3; color: #b42323; }
+  .v-mid { background: #fff3cc; color: #8a6400; }
+  .v-good { background: #d9f7e6; color: #127a42; }
+  .lbl { font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 10px; }
+
+  /* compare */
+  .vs { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+  .vs .card h3 { font-size: 24px; }
+  .vs ul { margin: 0; padding-left: 20px; font-size: 18px; line-height: 1.7; }
+
+  /* loop */
+  .loop { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 20px 0 30px; }
+  .loop .node { background: var(--card); border: 2px solid var(--blue); border-radius: 999px; padding: 16px 30px; font-size: 22px; font-weight: 700; }
+  .loop .arr { color: var(--cyan); font-size: 30px; }
+
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 16px; }
+  .opt { background: var(--card); border: 2px solid var(--line); border-radius: 12px; padding: 14px 18px; font-size: 17px; line-height: 1.45; position: relative; }
+  .opt .k { font-weight: 800; color: var(--cyan); margin-right: 8px; }
+  .opt.win { transition: border-color .3s, background .3s; }
+  .opt.win.on2 { border-color: var(--green); background: color-mix(in srgb, var(--green) 8%, transparent); }
+  .why { font-size: 14.5px; color: var(--green); margin: -6px 0 14px 4px; }
+
+  .template { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 22px 26px; font-family: "JetBrains Mono", monospace; font-size: 18px; line-height: 1.75; }
+  .template .ph { color: var(--yellow); }
+  .template .k { color: var(--cyan); font-weight: 500; }
+  .btn { font-family: Poppins, sans-serif; background: var(--blue); color: #fff; border: 0; border-radius: 8px; padding: 10px 18px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .btn:active { transform: translateY(1px); }
+
+  .ai-out { background: var(--paper); color: var(--paper-ink); border-radius: 12px; padding: 18px 22px; font-size: 16px; line-height: 1.6; }
+
+  .center { display: flex; flex-direction: column; justify-content: center; height: calc(100% - 20px); }
+
+  /* progress + hint */
+  #progress { position: fixed; left: 0; bottom: 0; height: 3px; background: var(--blue); transition: width .3s; z-index: 5; }
+  #hint { position: fixed; right: 14px; bottom: 10px; font-size: 11px; color: var(--muted); z-index: 5; font-family: "JetBrains Mono", monospace; }
+
+  /* ---------- additions for full session ---------- */
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px 22px 20px; }
+  .stat .num { font-size: 52px; font-weight: 800; line-height: 1; color: var(--cyan); }
+  .stat .num small { font-size: 22px; color: var(--muted); font-weight: 600; }
+  .stat .cap { font-size: 16px; line-height: 1.4; margin-top: 10px; color: var(--text2); }
+  .bars { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .bar { display: grid; grid-template-columns: 74px 1fr 34px; align-items: center; gap: 8px; font-size: 13px; }
+  .bar i { display: block; height: 10px; border-radius: 5px; background: var(--blue); }
+  .bar b { text-align: right; font-weight: 600; }
+  .quote { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--cyan); border-radius: 10px; padding: 16px 20px; font-size: 18px; line-height: 1.5; font-style: italic; color: var(--text2); }
+  .agenda { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 36px; }
+  .agenda li { display: flex; gap: 16px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 13px 16px; font-size: 18px; }
+  .agenda .t { font-family: "JetBrains Mono", monospace; font-size: 14px; color: var(--cyan); width: 92px; flex: none; }
+  .agenda li.brk { background: transparent; border-style: dashed; color: var(--muted); }
+  .rule-card { border-radius: 14px; padding: 22px; border: 1px solid var(--line); background: var(--card); }
+  .rule-card h3 { margin: 0 0 10px; font-size: 22px; }
+  .rule-card ul { margin: 0; padding-left: 20px; font-size: 17px; line-height: 1.65; }
+  .tl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .tl .rule-card { border-top-width: 6px; }
+  .tl .g { border-top-color: var(--green); } .tl .g h3 { color: var(--green); }
+  .tl .a { border-top-color: var(--amber); } .tl .a h3 { color: var(--amber); }
+  .tl .r { border-top-color: var(--red); } .tl .r h3 { color: var(--red); }
+  .sort { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 22px; }
+  .sort .row { display: flex; align-items: center; justify-content: space-between; gap: 14px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; font-size: 17px; line-height: 1.35; }
+  .sort .row .n { color: var(--cyan); font-weight: 700; margin-right: 8px; }
+  .pill { flex: none; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; }
+  .pill.g { background: color-mix(in srgb, var(--green) 15%, transparent); color: var(--green); }
+  .pill.a { background: color-mix(in srgb, var(--amber) 15%, transparent); color: var(--amber); }
+  .pill.r { background: color-mix(in srgb, var(--red) 15%, transparent); color: var(--red); }
+  .fgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .fgrid .card { padding: 16px 16px; }
+  .fgrid .card h3 { font-size: 17px; margin-bottom: 6px; color: var(--cyan); }
+  .fgrid .card p { font-size: 14px; line-height: 1.45; margin: 0; color: var(--text2); }
+  .notes { font-family: "JetBrains Mono", monospace; font-size: 15px; line-height: 1.65; background: var(--panel); border: 1px dashed var(--dash); border-radius: 10px; padding: 16px 18px; color: var(--text2); }
+  table.mins { width: 100%; border-collapse: collapse; font-size: 15px; background: var(--paper); color: var(--paper-ink); border-radius: 12px; overflow: hidden; }
+  table.mins th { background: var(--paper-head); text-align: left; padding: 9px 12px; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+  table.mins td { padding: 9px 12px; border-top: 1px solid var(--paper-line); vertical-align: top; }
+  .flag { background: #fde3e3; color: #b42323; font-weight: 700; border-radius: 4px; padding: 1px 6px; }
+  .flagnote { font-size: 14px; color: var(--red); font-weight: 600; margin-top: 8px; }
+  .big-q { font-size: 34px; font-weight: 700; line-height: 1.3; }
+  .blank { display: inline-block; min-width: 150px; border-bottom: 4px solid var(--yellow); margin: 0 6px; }
+  .check { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  .check .card { text-align: left; }
+  .check .card .letter { background: var(--green); }
+  .divider-num { font-size: 120px; font-weight: 800; line-height: 1; color: color-mix(in srgb, var(--blue) 25%, transparent); margin-bottom: -10px; }
+  .samplebox { font-family: "JetBrains Mono", monospace; font-size: 13.5px; line-height: 1.6; background: var(--panel); border: 1px dashed var(--dash); border-radius: 10px; padding: 12px 14px; color: var(--text2); }
+  .samplebox b { color: var(--cyan); font-weight: 500; }
+  .formula { font-family: "JetBrains Mono", monospace; font-size: 22px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; color: var(--yellow); }
+
+  .flagable { border-radius: 4px; padding: 1px 6px; transition: background .3s, color .3s; }
+  .flagable.on2 { background: #fde3e3; color: #b42323; font-weight: 700; }
+
+  .out, .ai-out, table.mins { border: 1px solid var(--line); }
+  .card, .stat, .rule-card, .agenda li, .opt, .quote, .ask, .prompt, .notes, .samplebox, .imgbox, .timer { box-shadow: var(--shadow); }
+  .slide { box-shadow: var(--shadow); }
+  .scene-ink { stroke: var(--text); }
+  .scene-owner { stroke: var(--cyan); }
+  aside.notes { display: none; }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+
+<!-- A1 ─ Title -->
+<section class="slide">
+  <div class="center">
+    <div style="width:92px;height:92px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;margin-bottom:22px"><img src="img/logo.png" alt="EastwayAI logo" style="width:58px;height:58px"></div>
+    <div class="tag">Apraava Energy · AI Productivity and Digital Mindset Programme</div>
+    <h1 class="huge">Foundations of Generative AI<br>in the Workplace</h1>
+    <p class="lead muted" style="margin-top:6px">Session 1 of 3 &nbsp;·&nbsp; 24 November 2026 &nbsp;·&nbsp; 2:00 – 4:00 PM</p>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Session 1</div></div>
+</section>
+
+<!-- A2 ─ Agenda -->
+<section class="slide">
+  <div class="tag">Today</div>
+  <h1>What we'll do in the next 2 hours</h1>
+  <div class="rule"></div>
+  <ul class="agenda" style="grid-template-rows:repeat(4,auto);grid-auto-flow:column">
+    <li><span class="t">0:00</span>What you told us</li>
+    <li><span class="t">0:10</span>How generative AI really works</li>
+    <li><span class="t">0:35</span>Where AI helps in energy</li>
+    <li class="brk"><span class="t">0:50</span>Break, then the ₹250 crore question</li>
+    <li><span class="t">1:02</span>Game: why is he running?</li>
+    <li><span class="t">1:10</span>Precision prompting: the 5 elements</li>
+    <li><span class="t">1:30</span>Hands-on: minutes, then build a skill</li>
+    <li><span class="t">1:50</span>Your template and next steps</li>
+  </ul>
+  <p class="lead" style="margin-top:28px">You leave with: <span class="cyan">a framework</span> · <span class="cyan">a template</span> · <span class="cyan">a 5-point check</span></p>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Agenda</div></div>
+</section>
+
+<!-- A3 ─ What you told us -->
+<section class="slide">
+  <div class="tag">What you told us · 104 responses</div>
+  <h1>You already use AI. A lot.</h1>
+  <div class="rule"></div>
+  <div class="grid4">
+    <div class="stat frag" data-f="1"><div class="num">50<small> / 104</small></div><div class="cap">use AI <b>daily</b>. Another 35 use it a few times a week.</div></div>
+    <div class="stat frag" data-f="2"><div class="num">79<small> / 104</small></div><div class="cap"><b>go back and forth</b>, refining the prompt until it's usable.</div></div>
+    <div class="stat frag" data-f="3"><div class="num">10<small> / 104</small></div><div class="cap">have a <b>reusable template</b>. That's today's gap.</div></div>
+    <div class="stat frag" data-f="4"><div class="cap" style="margin:0 0 10px;color:var(--muted);font-size:13px;letter-spacing:1.5px;text-transform:uppercase">Tools you use</div>
+      <div class="bars">
+        <div class="bar"><span>ChatGPT</span><i style="width:100%"></i><b>78</b></div>
+        <div class="bar"><span>Copilot</span><i style="width:78%"></i><b>61</b></div>
+        <div class="bar"><span>Gemini</span><i style="width:46%"></i><b>36</b></div>
+        <div class="bar"><span>Claude</span><i style="width:29%"></i><b>23</b></div>
+      </div>
+    </div>
+  </div>
+  <div class="ask frag" data-f="5" style="margin-top:26px;font-size:21px">Top concern: <b>confidential data</b> &nbsp;·&nbsp; Top frustration: <b>wrong facts</b></div>
+  <aside class="notes">Point out: they're not beginners. 50 daily users, 79 refining by trial and error, only 10 with a template. That gap is today's goal. Say: today is less theory, more practice on your real work.</aside>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Survey of Apraava employees, Nov 2026</div></div>
+</section>
+
+<!-- A4 ─ What you asked for -->
+<section class="slide">
+  <div class="tag">In your words</div>
+  <h1>What you asked this session to be</h1>
+  <div class="rule"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+    <div class="quote">"Hands-on exercises using actual work scenarios and datasets, with practical tips that can be applied immediately."</div>
+    <div class="quote">"Focusing on live walkthroughs of our actual day-to-day tasks instead of theoretical AI concepts."</div>
+  </div>
+  <p class="lead" style="margin-top:24px"><span class="cyan">Every exercise today comes from your tasks.</span></p>
+  <aside class="notes">Other survey asks: "It will help us understand what prompt should be given for what type of output." · "Hands-on training with my real data types, rule-based prompting, verifying outputs, turning repeat tasks into reusable tools."</aside>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>From the survey</div></div>
+</section>
+
+<!-- A5 ─ Ground rule -->
+<section class="slide">
+  <div class="tag">One rule before we start</div>
+  <h1>Keep company data safe</h1>
+  <div class="rule"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px">
+    <div class="rule-card" style="border-top:6px solid var(--green)"><h3 class="green">Today</h3><ul><li>Use only the <b>sample data</b> on these slides</li><li>Any tool is fine: Copilot, ChatGPT, Gemini</li></ul></div>
+    <div class="rule-card" style="border-top:6px solid var(--blue)"><h3 class="accent">At work</h3><ul><li>Use the <b>company-approved tool</b>, signed in with your work account</li><li>Never paste confidential, personal, financial or customer data into public tools</li><li>Not sure? <b>Ask IT first</b></li></ul></div>
+  </div>
+  <p class="muted" style="font-size:17px;margin-top:22px">Session 3 covers data classification and responsible AI in depth.</p>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Responsible use</div></div>
+</section>
+
+<!-- A6 ─ Warm-up poll -->
+<section class="slide">
+  <div class="center">
+    <div class="act">Warm-up · Type in the chat</div>
+    <p class="big-q">If you could hand off <span class="cyan">one task</span> to AI starting tomorrow, what would it be?</p>
+    <div style="margin-top:20px"><div class="timer" data-sec="60">1:00</div></div>
+    <p class="frag lead" data-f="1" style="margin-top:24px">Hold on to your answer. <span class="yellow">It's your running example for the whole session.</span></p>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Warm-up</div></div>
+</section>
+
+<!-- A7 ─ Module 1 divider -->
+<section class="slide">
+  <div class="center">
+    <div class="divider-num">01</div>
+    <div class="tag">Module 1</div>
+    <h1 class="huge">How generative AI really works</h1>
+    <p class="lead muted">And why it sounds just as sure when it's wrong.</p>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Module 1 · The AI-enabled workplace</div></div>
+</section>
+
+<!-- A8 ─ Activity: finish the sentence -->
+<section class="slide">
+  <div class="act">Activity · Finish the sentence</div>
+  <h1>Type the next word in the chat. Fast.</h1>
+  <div class="rule"></div>
+  <p class="big-q">"The cat sat on the <span class="blank"></span>"</p>
+  <p class="big-q frag" data-f="1" style="margin-top:22px">"Safety first, <span class="blank"></span>"</p>
+  <div class="ask frag" data-f="2" style="margin-top:28px;font-size:24px">You <b>predicted</b>. You didn't look it up.<br><span class="yellow">AI does exactly this, one word at a time.</span></div>
+  <aside class="notes">Most will type "mat", and "always". Explain: nobody looked it up, they predicted the most likely next word from everything they've read. ChatGPT and Copilot do the same thing billions of times. Most likely ≠ true.</aside>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Prediction, not lookup</div></div>
+</section>
+
+<!-- A9 ─ Three things to know -->
+<section class="slide">
+  <div class="tag">In plain terms</div>
+  <h1>Three things to know about every AI tool</h1>
+  <div class="rule"></div>
+  <div class="grid3">
+    <div class="card frag" data-f="1"><div class="letter">1</div><h3>It predicts. It doesn't look up.</h3><div class="q" style="font-size:17px">Sounds just as sure when it's wrong.</div></div>
+    <div class="card frag" data-f="2"><div class="letter">2</div><h3>Its knowledge has a cutoff date.</h3><div class="q" style="font-size:17px">Recent laws and amendments are where it slips.</div></div>
+    <div class="card frag" data-f="3"><div class="letter">3</div><h3>It knows nothing about Apraava.</h3><div class="q" style="font-size:17px"><span class="cyan">Context is your job.</span></div></div>
+  </div>
+  <p class="frag" data-f="4" style="font-size:22px;margin-top:26px"><span class="green">Good at:</span> drafting, rewriting, summarising &nbsp;·&nbsp; <span class="red">Weak at:</span> facts, figures, laws</p>
+  <aside class="notes">1) It writes the most likely next words. Unless it's searching the web or reading your file, it isn't checking facts. 2) It learned from text up to a cutoff date: recent amendments, tariff orders, regulations slip. 3) It doesn't know your site, manager, format or deadline unless you tell it. We come back to this in the wallet game.</aside>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Capabilities and limitations</div></div>
+</section>
+
+<!-- A10 ─ Demo 1: made-up law -->
+<section class="slide">
+  <div class="act">Live demo · Vote in the chat</div>
+  <h1>Demo 1: the confident legal answer</h1>
+  <div class="rule"></div>
+  <div style="display:grid;grid-template-columns:1.1fr .9fr;gap:30px;align-items:start">
+    <div>
+      <div class="lbl">Step 1 · Ask</div>
+      <div class="notes">Which section of the Electricity Act, 2003 penalises a contractor for delaying a transmission line project?</div>
+      <div class="ask">Look at the answer. <b>Would you put it in a letter?</b> Type Yes or No.</div>
+      <div class="frag" data-f="1" style="margin-top:18px"><div class="lbl">Step 2 · Push it</div>
+      <div class="notes">Quote the exact text of that section, word for word.</div></div>
+    </div>
+    <div class="frag" data-f="2">
+      <div class="lbl">From your survey</div>
+      <div class="quote">"It said non-compliance is punishable under the Electricity Act. There is no such provision."</div>
+      <p class="lead" style="margin-top:18px;font-size:22px"><span class="red">AI can invent laws and clauses.</span><br>Check the original.</p>
+      <aside class="notes">Full survey quote: "In a draft letter, it said non-compliance on that issue is punishable under the Electricity Act. However, there is no specific provision. It was noticed before any communication was issued." Run step 1 live, ask for a vote, then step 2: it usually can't quote the text, or quotes something unrelated.</aside>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Fabrication</div></div>
+</section>
+
+<!-- A11 ─ Demo 2: wrong number -->
+<section class="slide">
+  <div class="act">Live demo · Guess first</div>
+  <h1>Demo 2: the number that looks right</h1>
+  <div class="rule"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:start">
+    <div>
+      <div class="lbl">Ask</div>
+      <div class="notes">What is the full-load current of a 75 kW, 415 V, 3-phase induction motor?</div>
+      <div class="ask"><b>Do you trust the number?</b></div>
+    </div>
+    <div class="frag" data-f="1">
+      <div class="lbl">Check it by hand</div>
+      <div class="formula">I = P ÷ (√3 × V × pf × η)<br>= 75,000 ÷ (1.732 × 415 × 0.85 × 0.93)<br>≈ <span style="color:var(--green)">132 A</span></div>
+      <p style="font-size:19px;margin-top:14px">It quietly assumed <b>power factor</b> and <b>efficiency</b>.</p>
+      <p class="frag" data-f="2" style="font-size:20px;margin-top:6px"><span class="cyan">Add:</span> <b>"List every assumption you made."</b></p>
+      <aside class="notes">Ask: what would you need to know to calculate it yourself? (power factor, efficiency). With pf 0.85 and efficiency 0.93 you get about 132 A. The AI picks values silently. Tip: add 'List every assumption you made' to any technical prompt.</aside>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Hidden assumptions</div></div>
+</section>
+
+<!-- A12 ─ Traffic light -->
+<section class="slide">
+  <div class="tag">The takeaway from Module 1</div>
+  <h1>The traffic light rule</h1>
+  <div class="rule"></div>
+  <div class="tl">
+    <div class="rule-card g frag" data-f="1"><h3>Green · Use with a read-through</h3><ul><li>Rewriting and tone</li><li>Grammar and structure</li><li>Explaining a concept</li><li>Brainstorming ideas</li></ul></div>
+    <div class="rule-card a frag" data-f="2"><h3>Amber · Check against your source</h3><ul><li>Summaries of your documents</li><li>Comparisons</li><li>Data analysis</li><li>Excel formulas</li></ul></div>
+    <div class="rule-card r frag" data-f="3"><h3>Red · Verify independently</h3><ul><li>Laws and regulations</li><li>Specs, figures and calculations</li><li>Citations and sources</li><li>Final decisions</li></ul></div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Green · Amber · Red</div></div>
+</section>
+
+<!-- A13 ─ Activity: sort it -->
+<section class="slide">
+  <div class="act">Activity · Green, Amber or Red?</div>
+  <h1 style="font-size:38px">Type the number and your colour in the chat</h1>
+  <div style="display:flex;align-items:center;gap:16px;margin:-4px 0 20px"><div class="timer" data-sec="90">1:30</div><span class="muted" style="font-size:15px">e.g. "1 Green, 2 Amber…"</span></div>
+  <div class="sort">
+    <div class="row"><span><span class="n">1</span>Make my email to a vendor more polite</span><span class="pill g frag" data-f="1">Green</span></div>
+    <div class="row"><span><span class="n">2</span>Summarise a 20-page O&amp;M report I uploaded</span><span class="pill a frag" data-f="1">Amber</span></div>
+    <div class="row"><span><span class="n">3</span>Find the CEA regulation clause on earthing</span><span class="pill r frag" data-f="1">Red</span></div>
+    <div class="row"><span><span class="n">4</span>Write an Excel formula for monthly generation</span><span class="pill a frag" data-f="1">Amber</span></div>
+    <div class="row"><span><span class="n">5</span>Explain what "performance ratio" means in solar</span><span class="pill g frag" data-f="1">Green</span></div>
+    <div class="row"><span><span class="n">6</span>Give the rated torque of a specific turbine model</span><span class="pill r frag" data-f="1">Red</span></div>
+  </div>
+  <p class="frag" data-f="2" style="font-size:21px;margin-top:22px">Bonus: <b>board minutes from confidential notes, in a public tool?</b> <span class="red">Red: the data.</span></p>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Know when to verify</div></div>
+</section>
+
+<!-- A14 ─ Opportunities by function -->
+<section class="slide">
+  <div class="tag">Module 1 · Where AI helps</div>
+  <h1>AI opportunities across Apraava</h1>
+  <div class="rule" style="margin-bottom:22px"></div>
+  <div class="fgrid">
+    <div class="card"><h3>Site O&amp;M</h3><p>Daily generation reports, turbine fault and restoration summaries</p></div>
+    <div class="card"><h3>Projects &amp; PMO</h3><p>Combining contractor updates into one DPR, MoMs, board updates</p></div>
+    <div class="card"><h3>HSSE</h3><p>Safety alerts, incident reports, toolbox talks, posters</p></div>
+    <div class="card"><h3>Finance &amp; treasury</h3><p>Bank correspondence, FD letters, compliance trackers</p></div>
+    <div class="card"><h3>Legal &amp; secretarial</h3><p>First drafts of minutes, clause comparisons (mind confidentiality)</p></div>
+    <div class="card"><h3>Procurement</h3><p>Comparing vendor quotes, checking contracts against templates</p></div>
+    <div class="card"><h3>HR &amp; admin</h3><p>Employee communications, scheduling, travel and expense trackers</p></div>
+    <div class="card"><h3>Metering</h3><p>Rule-based Excel work, mapping consumers to transformers</p></div>
+  </div>
+  <p class="muted" style="font-size:16px;margin-top:20px">Every task above came from your survey answers.</p>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>AI in the energy sector</div></div>
+</section>
+
+<!-- A15 ─ Activity: your task -->
+<section class="slide">
+  <div class="act">Activity · Find your row</div>
+  <h1>Write your task as one sentence</h1>
+  <div class="rule"></div>
+  <p class="big-q">"Every week I <span class="blank" style="min-width:260px"></span>,<br>which takes <span class="blank" style="min-width:90px"></span> hours."</p>
+  <div style="margin-top:24px;display:flex;gap:14px;align-items:center"><div class="timer" data-sec="180">3:00</div><span class="muted" style="font-size:16px">Type it in the chat</span></div>
+  <div class="ask frag" data-f="1" style="margin-top:24px">e.g. <i>"Every week I combine 4 contractor updates into one report, which takes 5 hours."</i><br><span class="yellow">This is your running example.</span></div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Your running example</div></div>
+</section>
+
+<!-- A16 ─ Break -->
+<section class="slide">
+  <div class="center" style="align-items:center;text-align:center">
+    <div class="tag">Break</div>
+    <h1 class="huge">5 minutes</h1>
+    <div style="margin:10px 0 26px"><div class="timer" data-sec="300" style="font-size:34px;padding:14px 26px">5:00</div></div>
+    <p class="lead muted">When we're back: a number worth guessing.</p>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Break</div></div>
+</section>
+
+<!-- D1 ─ Guess the number -->
+<section class="slide">
+  <div class="center" style="align-items:center;text-align:center">
+    <div class="act">Activity · Guess the number</div>
+    <div style="font-size:104px;font-weight:800;line-height:1.1;letter-spacing:-2px;margin:14px 0 6px;white-space:nowrap;background:linear-gradient(90deg,var(--yellow),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent">₹2,50,00,00,000</div>
+    <p class="big-q" style="font-size:30px;margin-top:10px">What is this number? <span class="cyan">Type your guess in the chat.</span></p>
+    <div style="margin-top:18px"><div class="timer" data-sec="45">0:45</div></div>
+    <p class="frag lead muted" data-f="1" style="margin-top:22px">Hint: it's connected to something many of us do with AI every day.</p>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Guess the number</div></div>
+</section>
+
+<!-- D2 ─ The reveal: DPDP Act -->
+<section class="slide">
+  <div class="tag">The answer</div>
+  <h1>The maximum penalty under India's DPDP Act</h1>
+  <div class="rule"></div>
+  <p class="lead" style="margin-bottom:22px"><b>DPDP Act, 2023:</b> up to <span class="yellow"><b>₹250 crore per instance</b></span> for failing to protect personal data.</p>
+  <div class="grid3">
+    <div class="stat frag" data-f="1" style="border-top:5px solid var(--red)"><div class="num" style="color:var(--red)">₹250<small> cr</small></div><div class="cap">No reasonable security safeguards to prevent a personal data breach</div></div>
+    <div class="stat frag" data-f="1" style="border-top:5px solid var(--amber)"><div class="num" style="color:var(--amber)">₹200<small> cr</small></div><div class="cap">Not informing the Board and affected people about a breach</div></div>
+    <div class="stat frag" data-f="1" style="border-top:5px solid var(--yellow)"><div class="num" style="color:var(--yellow)">₹50<small> cr</small></div><div class="cap">Other breaches of the Act, where no specific penalty applies</div></div>
+  </div>
+  <div class="ask frag" data-f="2" style="margin-top:24px;font-size:20px">Rules notified Nov 2025 &nbsp;·&nbsp; most obligations apply from <b>May 2027</b></div>
+  <aside class="notes">The Data Protection Board can fine a company up to ₹250 crore per instance for failing to take reasonable security safeguards to prevent a personal data breach (Section 8(5), Schedule). ₹200 crore for not notifying a breach to the Board and affected people. Up to ₹50 crore for other breaches. Rules notified Nov 2025; most obligations from May 2027. Message: the habits we build today are the ones we'll need then. This is awareness, not legal advice.</aside>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Source: DPDP Act 2023, Schedule · DPDP Rules 2025</div></div>
+</section>
+
+<!-- D3 ─ Spot the personal data -->
+<section class="slide">
+  <div class="act">Activity · Spot the personal data</div>
+  <h1 style="font-size:38px">Someone is about to paste this into ChatGPT</h1>
+  <div class="rule" style="margin-bottom:22px"></div>
+  <div style="display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:start">
+    <div>
+      <div class="lbl">The prompt (sample data)</div>
+      <div class="notes" style="font-size:17px;line-height:1.8">Draft a warning letter to <span class="flagable" data-win="1">Ramesh Kumar</span> (Emp ID <span class="flagable" data-win="1">40213</span>, phone <span class="flagable" data-win="1">98765 43210</span>) for not wearing a harness during the near miss at Block C on 18 Nov. His Aadhaar is <span class="flagable" data-win="1">1234 5678 9012</span> and he lives at <span class="flagable" data-win="1">14 MG Road, Jaipur</span>. He has <span class="flagable" data-win="1">a back injury from 2024</span>.</div>
+      <div style="margin-top:16px;display:flex;gap:14px;align-items:center"><div class="timer" data-sec="60">1:00</div><span class="muted" style="font-size:15px">How many pieces of personal data can you find?</span></div>
+    </div>
+    <div>
+      <div class="frag" data-f="1">
+        <div class="lbl">Six pieces</div>
+        <p style="font-size:18px;line-height:1.6">Name · Emp ID · phone · Aadhaar · address · health<br><span class="muted">The AI needs <b>none</b> of them.</span></p>
+      </div>
+      <div class="frag" data-f="2" style="margin-top:14px">
+        <div class="lbl">Same result, no personal data</div>
+        <div class="better" style="font-size:16px">Draft a warning letter to <b>[Employee A]</b> for a near miss at <b>[Site]</b> on <b>[Date]</b>. Firm but fair, under 150 words.</div>
+        <p style="font-size:17px;margin-top:12px">Add real details back <span class="cyan">after</span>.</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Personal data and AI</div></div>
+</section>
+
+<!-- D4 ─ Caviard -->
+<section class="slide">
+  <div class="tag">A tool that helps</div>
+  <h1 style="font-size:40px">Caviard: mask personal data before AI sees it</h1>
+  <div class="rule" style="margin-bottom:22px"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start">
+    <div>
+      <div class="lbl">How it works</div>
+      <ol style="font-size:18px;line-height:1.7;padding-left:22px;margin:0 0 16px">
+        <li><b>Chrome extension</b> for ChatGPT and DeepSeek</li>
+        <li>Spots names, emails, phone numbers</li>
+        <li>Swaps them for <span class="cyan">placeholders</span> before sending</li>
+        <li><b>Alt + R</b> shows your original</li>
+      </ol>
+    </div>
+    <div>
+      <div class="lbl">What the AI receives (illustration)</div>
+      <div class="notes" style="font-size:15.5px;line-height:1.75">Draft a warning letter to <span style="color:var(--cyan)">[NAME_1]</span> (phone <span style="color:var(--cyan)">[PHONE_1]</span>, email <span style="color:var(--cyan)">[EMAIL_1]</span>) for the near miss at Block C on 18 Nov.</div>
+      <div class="ask frag" data-f="1" style="font-size:18px;line-height:1.6;margin-top:16px">
+        <b>Before you install</b><br>• Get IT approval<br>• Masks personal data, not company secrets<br>• No tool? Mask by hand: <span class="yellow">[Employee A]</span>
+      </div>
+      <aside class="notes">Per the Chrome Web Store listing: Caviard detects personal data with pattern recognition and replaces it with placeholders; the developer says processing happens in the browser and nothing is shared with any AI or third party. Few ratings so far, so position it as an example, not an endorsement. Copilot is not listed. Masking protects personal data; it does not make confidential company data safe to paste.</aside>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Mask first, then prompt</div></div>
+</section>
+
+<!-- A17 ─ Module 2 divider -->
+<section class="slide">
+  <div class="center">
+    <div class="divider-num">02</div>
+    <div class="tag">Module 2</div>
+    <h1 class="huge">Precision prompting for business outcomes</h1>
+    <p class="lead muted">It starts with a game.</p>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Module 2 · Precision prompting</div></div>
+</section>
+
+<!-- 1 ─ Activity intro -->
+<section class="slide">
+  <div class="center">
+    <div class="act">Activity · 5 minutes</div>
+    <h1 class="huge">Be the AI for a minute</h1>
+    <p class="lead" style="max-width:900px">I'll show you a picture and ask one question. Type your answer in the chat.<br>Then I'll give you clues, one at a time. <span class="yellow">After every clue, update your answer.</span></p>
+    <p class="muted" style="font-size:18px;margin-top:10px">There are no wrong answers. Watch how your answer changes.</p>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Session 1 · Foundations of Generative AI</div></div>
+</section>
+
+<!-- 2 ─ The picture -->
+<section class="slide">
+  <div class="tag">The question</div>
+  <h1>Why is he running?</h1>
+  <div class="rule"></div>
+  <div class="two" style="height:auto">
+    <div>
+      <p class="lead">Look at the picture.</p>
+      <p style="font-size:46px;font-weight:700;color:var(--cyan);margin:10px 0 26px">Why is he running?</p>
+      <div class="timer" data-sec="30">0:30</div>
+      <div class="ask frag" data-f="1">Type your guess in the chat.<br><span class="muted">How many different answers do we have?</span></div>
+    </div>
+    <div class="imgbox"><img src="img/running.jpg" alt="A man running down a dark, foggy street at night"></div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>No clues yet</div></div>
+</section>
+
+<!-- 3 ─ Clue 1 -->
+<section class="slide">
+  <div class="tag">Clue 1 of 4</div>
+  <h1>The missing piece</h1>
+  <div class="rule"></div>
+  <div class="two" style="height:auto">
+    <div>
+      <div class="clue-label">Adding context</div>
+      <div class="clue-text">He's holding something tightly in his hand.</div>
+      <span class="mono-note">Still too vague, right? We need more detail.</span>
+      <div class="ask frag" data-f="1">Update your guess in the chat.<br><span class="muted">Did anyone's answer change?</span></div>
+    </div>
+    <div class="imgbox"><img src="img/fist.jpg" alt="A tightly clenched fist"></div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Clue 1 · Context</div></div>
+</section>
+
+<!-- 4 ─ Clue 2 -->
+<section class="slide">
+  <div class="tag">Clue 2 of 4</div>
+  <h1>Defining the relationship</h1>
+  <div class="rule"></div>
+  <div class="two" style="height:auto">
+    <div>
+      <div class="clue-label">The object</div>
+      <div class="clue-text" style="font-weight:500">That object belongs to <span class="cyan" style="font-weight:700">someone else</span>.</div>
+      <div class="ask frag" data-f="1">Update your guess.<br><span class="muted">Are our answers starting to agree?</span></div>
+    </div>
+    <div class="card" style="height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
+      <svg width="90" height="80" viewBox="0 0 24 24" fill="none" style="stroke:var(--blue)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h15l-4-4M20 16H5l4 4"/></svg>
+      <div style="font-size:30px;font-weight:700;color:var(--blue);margin-top:16px">Transfer of possession</div>
+      <div class="muted" style="font-size:18px;margin-top:6px">Ownership is changing hands.</div>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Clue 2 · Relationship</div></div>
+</section>
+
+<!-- 5 ─ Clue 3 -->
+<section class="slide">
+  <div class="tag">Clue 3 of 4</div>
+  <h1>Introducing constraints</h1>
+  <div class="rule"></div>
+  <div class="two" style="height:auto">
+    <div>
+      <div class="clue-label">The pursuit</div>
+      <div class="clue-text">The owner is chasing him.</div>
+      <div class="ask frag" data-f="1">Last chance to update your guess.<br><span class="muted">Who is confident now?</span></div>
+    </div>
+    <div class="imgbox" style="background:var(--panel)">
+      <svg viewBox="0 0 480 340" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" role="img" aria-label="A person running away while the owner chases him, shouting Stop" style="display:block">
+        <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--glow1)"/><stop offset="1" stop-color="var(--panel)"/></linearGradient></defs>
+        <rect width="480" height="340" fill="url(#sky)"/>
+        <g opacity=".35" stroke="var(--muted)" stroke-width="4" stroke-linecap="round"><line x1="430" y1="60" x2="430" y2="270"/><line x1="430" y1="62" x2="404" y2="62"/><line x1="40" y1="70" x2="40" y2="270"/><line x1="40" y1="72" x2="66" y2="72"/></g>
+        <circle cx="404" cy="70" r="7" fill="var(--yellow)" opacity=".8"/><circle cx="66" cy="80" r="7" fill="var(--yellow)" opacity=".8"/>
+        <line x1="0" y1="272" x2="480" y2="272" stroke="var(--line)" stroke-width="4"/>
+        <g stroke="var(--muted)" stroke-width="4" stroke-linecap="round" opacity=".55"><line x1="232" y1="140" x2="266" y2="140"/><line x1="222" y1="168" x2="262" y2="168"/><line x1="236" y1="196" x2="264" y2="196"/></g>
+        <!-- runner -->
+        <g class="scene-ink" fill="none" stroke-width="15" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="350" y1="118" x2="328" y2="190"/>
+          <polyline points="344,132 316,148 304,126"/>
+          <polyline points="344,132 370,150 392,138"/>
+          <polyline points="328,190 356,220 350,262"/>
+          <polyline points="328,190 302,218 274,228"/>
+        </g>
+        <circle cx="360" cy="96" r="19" fill="var(--text)"/>
+        <circle cx="396" cy="136" r="10" fill="var(--text)"/>
+        <!-- owner -->
+        <g class="scene-owner" fill="none" stroke-width="15" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="146" y1="122" x2="126" y2="194"/>
+          <polyline points="140,136 168,126 196,104"/>
+          <polyline points="140,136 112,152 100,132"/>
+          <polyline points="126,194 152,224 146,264"/>
+          <polyline points="126,194 100,220 72,228"/>
+        </g>
+        <circle cx="156" cy="100" r="19" fill="var(--cyan)"/>
+        <!-- speech bubble -->
+        <rect x="150" y="22" width="130" height="44" rx="12" fill="var(--card)" stroke="var(--cyan)" stroke-width="2.5"/>
+        <path d="M176 66 L168 84 L192 66 Z" fill="var(--card)" stroke="var(--cyan)" stroke-width="2.5" stroke-linejoin="round"/>
+        <line x1="177" y1="65" x2="191" y2="65" stroke="var(--card)" stroke-width="4"/>
+        <text x="215" y="51" text-anchor="middle" font-family="Poppins, sans-serif" font-size="20" font-weight="700" fill="var(--text)">Hey! Stop!</text>
+        <text x="130" y="306" text-anchor="middle" font-family="Poppins, sans-serif" font-size="15" font-weight="600" fill="var(--cyan)" letter-spacing="2">THE OWNER</text>
+      </svg>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Clue 3 · Constraints</div></div>
+</section>
+
+<!-- 6 ─ Clue 4 + reveal -->
+<section class="slide">
+  <div class="tag">Clue 4 of 4</div>
+  <h1>Finalising the detail</h1>
+  <div class="rule"></div>
+  <div class="two" style="height:auto">
+    <div>
+      <div class="clue-label">The object, identified</div>
+      <div class="clue-text yellow" style="font-weight:500">The object is a wallet.</div>
+      <p style="font-size:28px;font-weight:600">Now tell me: why is he running?</p>
+      <p class="frag red" data-f="1" style="font-size:44px;font-weight:700;margin-top:18px">He stole the wallet.</p>
+    </div>
+    <div class="imgbox"><img src="img/wallet.jpg" alt="A leather wallet on a wooden table"></div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Clue 4 · Specific detail</div></div>
+</section>
+
+<!-- 7 ─ Debrief -->
+<section class="slide">
+  <div class="tag">Debrief</div>
+  <h1>What just happened?</h1>
+  <div class="rule"></div>
+  <div class="two" style="grid-template-columns:1.05fr .95fr;height:auto;align-items:start">
+    <div>
+      <div class="ask" style="margin-top:0">Think about it: <b>why couldn't anyone answer correctly at the start?</b></div>
+      <div class="frag" data-f="1" style="margin-top:26px">
+        <p class="lead">You weren't wrong. <span class="cyan">You didn't have enough context.</span></p>
+      </div>
+      <p class="frag" data-f="2" style="font-size:30px;font-weight:700;margin-top:20px">AI works <span class="yellow">exactly the same way.</span></p>
+    </div>
+    <div class="funnel frag" data-f="1">
+      <div style="width:100%"><span>Picture only</span>Exercise? Late? Scared? Chasing a bus?</div>
+      <div style="width:88%"><span>+ Clue 1</span>He's carrying something</div>
+      <div style="width:74%"><span>+ Clue 2</span>It isn't his</div>
+      <div style="width:60%"><span>+ Clue 3</span>Someone's after him</div>
+      <div style="width:46%;background:linear-gradient(90deg,var(--red-dk),var(--red))"><span style="color:#fff">+ Clue 4</span>He stole a wallet</div>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>More context, fewer guesses</div></div>
+</section>
+
+<!-- 8 ─ You were the AI -->
+<section class="slide">
+  <div class="tag">The lesson</div>
+  <h1>You were the AI. The clues were the prompt.</h1>
+  <div class="rule"></div>
+  <table class="map">
+    <tr><th>In the activity</th><th>In a prompt to AI</th></tr>
+    <tr><td>Just the picture</td><td>"Write an email to the contractor."</td></tr>
+    <tr class="frag" data-f="1"><td>Clue 1 · Context</td><td>"…about the 12-day delay in foundation work at our Gujarat site."</td></tr>
+    <tr class="frag" data-f="2"><td>Clue 2 · Relationship</td><td>"I'm the project manager. This is my second reminder."</td></tr>
+    <tr class="frag" data-f="3"><td>Clue 3 · Constraints</td><td>"Firm but polite. Under 150 words. Recovery plan by Friday."</td></tr>
+    <tr class="frag" data-f="4"><td>Clue 4 · Specific detail</td><td>"List the 3 things the recovery plan must include."</td></tr>
+  </table>
+  <p class="frag" data-f="5" style="font-size:28px;font-weight:600;margin-top:26px">AI doesn't read your mind. <span class="yellow">Vague in, generic out.</span></p>
+  <aside class="notes">It gives the most likely answer to what you typed. Each clue = one piece of a prompt. With every clue the number of possible answers got smaller until only one made sense.</aside>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Context is your job, not the AI's</div></div>
+</section>
+
+<!-- 9 ─ Same game with AI: stepper -->
+<section class="slide">
+  <div class="tag">Watch it happen</div>
+  <h1 style="font-size:38px">Same game, with AI: add one clue at a time</h1>
+  <div class="rule" style="margin-bottom:22px"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:26px">
+    <div>
+      <div class="lbl">Your prompt</div>
+      <div class="prompt">
+        <span class="pl">Write an email to the contractor.</span>
+        <span class="pl frag" data-f="1"><b>Context</b>They are 12 days behind on foundation work for 18 wind turbines at our Gujarat site.</span>
+        <span class="pl frag" data-f="2"><b>Relationship</b>I am the project manager. This is my second reminder. The first went on 10 Nov with no reply.</span>
+        <span class="pl frag" data-f="3"><b>Constraints</b>Firm but polite, no threats. Under 150 words. I need a recovery plan by Friday, 27 Nov.</span>
+        <span class="pl frag" data-f="4"><b>Detail</b>Add a subject line, and list the 3 things the plan must cover: revised dates, extra resources, weekly milestones.</span>
+      </div>
+    </div>
+    <div>
+      <div class="lbl">What the AI gives back</div>
+      <div class="stack" style="height:380px">
+        <div class="out frag on" data-hide="1"><span class="verdict v-bad">Generic: could be about anything</span>
+Subject: Project Update
+
+Dear Sir/Madam,
+I hope this email finds you well. I am writing to follow up on the ongoing project and would appreciate an update on the current status at your earliest convenience.
+
+Looking forward to your response.
+Best regards</div>
+        <div class="out frag" data-f="1" data-hide="2"><span class="verdict v-mid">Knows the problem</span>
+Subject: Delay in Foundation Works
+
+Dear Team,
+We note that foundation work for the 18 WTGs at our Gujarat site is running 12 days behind schedule. Kindly share an update on the reasons for the delay and the expected completion date.
+
+Regards</div>
+        <div class="out frag" data-f="2" data-hide="3"><span class="verdict v-mid">Knows the history and who's speaking</span>
+Subject: Second Reminder: Delay in Foundation Works
+
+Dear Team,
+Further to my email of 10 November, to which we have not yet received a response, I am writing again about the 12-day delay in foundation work for the 18 WTGs at our Gujarat site…
+
+(still long, and no clear ask)</div>
+        <div class="out frag" data-f="3" data-hide="4"><span class="verdict v-mid">Right tone, clear deadline</span>
+Subject: Second Reminder: Recovery Plan Needed by Fri, 27 Nov
+
+Dear Team,
+Foundation work for the 18 WTGs at our Gujarat site is now 12 days behind schedule. We have not had a reply to my email of 10 November.
+
+Please share a recovery plan by Friday, 27 November so we can protect the commissioning timeline.</div>
+        <div class="out frag" data-f="4"><span class="verdict v-good">Ready to send after a quick check</span>
+Subject: Second Reminder: Recovery Plan Needed by Fri, 27 Nov
+
+Dear Team,
+Foundation work for the 18 WTGs at our Gujarat site is 12 days behind schedule, and we have not had a reply to my email of 10 November.
+
+Please share a recovery plan by Friday, 27 November, covering:
+• Revised completion dates per location
+• Additional manpower and equipment
+• Weekly milestones we can track
+
+Regards,
+Project Manager</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Each clue removes a guess</div></div>
+</section>
+
+<!-- 10 ─ Section: talking to AI -->
+<section class="slide">
+  <div class="center">
+    <div class="tag">Module 2 · Part B</div>
+    <h1 class="huge">How to talk to AI</h1>
+    <p class="lead" style="max-width:860px">It's a <span class="cyan">conversation</span>, not a Google search.</p>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Module 2 · Precision prompting</div></div>
+</section>
+
+<!-- 11 ─ Search vs conversation -->
+<section class="slide">
+  <div class="tag">Change the habit</div>
+  <h1>Stop searching. Start briefing.</h1>
+  <div class="rule"></div>
+  <div class="vs">
+    <div class="card">
+      <h3 class="muted">How we use Google</h3>
+      <ul class="muted">
+        <li>A few keywords: <i>"contractor delay email"</i></li>
+        <li>One try, then scroll</li>
+        <li>Finds pages that already exist</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:var(--blue)">
+      <h3 class="accent">How to use AI</h3>
+      <ul>
+        <li>Full sentences, with the background</li>
+        <li>Back and forth until it's right</li>
+        <li>Creates something new, for your situation</li>
+      </ul>
+    </div>
+  </div>
+  <div class="ask frag" data-f="1" style="margin-top:28px;font-size:22px">Brief AI like a <b>brilliant new joiner</b> who knows nothing about Apraava.</div>
+  <aside class="notes">Smart and fast, but knows nothing about Apraava, your site, your manager or your deadline. Ask: what would you tell a new joiner before asking them to draft this email? That's your prompt.</aside>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Brief it like a person</div></div>
+</section>
+
+<!-- 12 ─ Framework -->
+<section class="slide">
+  <div class="tag">The framework</div>
+  <h1>Five clues every good prompt carries</h1>
+  <div class="rule" style="margin-bottom:24px"></div>
+  <div class="grid5">
+    <div class="card frag" data-f="1"><div class="letter">R</div><h3>Role</h3><div class="q">Who should it be?</div><div class="ex">HSSE officer at a wind farm</div></div>
+    <div class="card frag" data-f="2"><div class="letter">C</div><h3>Context</h3><div class="q">What's going on?</div><div class="ex">Near miss, Block C, no harness</div></div>
+    <div class="card frag" data-f="3"><div class="letter">T</div><h3>Task</h3><div class="q">What do you need?</div><div class="ex">A safety alert</div></div>
+    <div class="card frag" data-f="4"><div class="letter">C</div><h3>Constraints</h3><div class="q">Tone, length, audience</div><div class="ex">Contractor workers, simple English, 80 words</div></div>
+    <div class="card frag" data-f="5"><div class="letter">F</div><h3>Format</h3><div class="q">How should it look?</div><div class="ex">Headline + 3 do's, 2 don'ts</div></div>
+  </div>
+  <p class="frag" data-f="6" style="font-size:24px;margin-top:26px">Each element <span class="cyan">removes a wrong guess.</span></p>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Role · Context · Task · Constraints · Format</div></div>
+</section>
+
+<!-- 13 ─ Activity: spot what's missing -->
+<section class="slide">
+  <div class="act">Activity · Spot what's missing</div>
+  <h1 style="font-size:36px">What clues is each prompt missing? Type in the chat.</h1>
+  <div style="display:flex;align-items:center;gap:16px;margin:-4px 0 20px"><div class="timer" data-sec="90">1:30</div><span class="muted" style="font-size:15px">Use the five elements: Role · Context · Task · Constraints · Format</span></div>
+  <div class="grid3">
+    <div>
+      <div class="weak">"Summarise this report."</div>
+      <div class="frag" data-f="1"><div class="miss">Missing: who reads it, how long, what matters</div>
+      <div class="better"><b>Better:</b> "Summarise this O&amp;M report <b>for the plant head</b> in <b>5 bullets</b>: generation vs target, top faults, actions."</div></div>
+    </div>
+    <div>
+      <div class="weak">"Write a safety alert."</div>
+      <div class="frag" data-f="2"><div class="miss">Missing: what happened, audience, tone, length</div>
+      <div class="better"><b>Better:</b> "Near miss, Block C, no harness. Alert for <b>contractor workers</b>, <b>simple English</b>, <b>80 words</b>, 3 do's."</div></div>
+    </div>
+    <div>
+      <div class="weak">"Make a PPT on generation."</div>
+      <div class="frag" data-f="3"><div class="miss">Missing: almost everything</div>
+      <div class="better"><b>Better:</b> "<b>6-slide outline</b> for <b>management</b>: Oct generation vs plan, reasons, actions. <b>Headline + 3 bullets</b> each."</div></div>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Find the missing clue</div></div>
+</section>
+
+<!-- 14 ─ Activity: build it -->
+<section class="slide">
+  <div class="act">Hands-on · Your turn</div>
+  <h1 style="font-size:38px">Write the full prompt, then run it</h1>
+  <div class="rule" style="margin-bottom:22px"></div>
+  <div style="display:grid;grid-template-columns:.9fr 1.1fr;gap:30px">
+    <div>
+      <div class="lbl">The situation</div>
+      <div class="card" style="font-size:18px;line-height:1.55">
+        Vendor invoice <b>#4471</b> for <b>₹3.2 lakh</b> is <b>25 days overdue</b>. The vendor has called twice. The payment is waiting for approval from your finance head.
+        <br><br><span class="cyan">Write a polite follow-up to your internal finance team asking for the status.</span>
+      </div>
+      <div style="margin-top:18px;display:flex;gap:14px;align-items:center"><div class="timer" data-sec="300">5:00</div><span class="muted" style="font-size:15px">Open Copilot or ChatGPT and try it</span></div>
+      <p class="muted" style="font-size:15px;margin-top:16px">Use sample details only. No real vendor or company data.</p>
+    </div>
+    <div class="frag" data-f="1">
+      <div class="lbl">One strong answer</div>
+      <div class="prompt" style="min-height:0;font-size:15px">
+        <span class="pl"><b>Role</b>You are an accounts executive at a renewable energy company.</span>
+        <span class="pl"><b>Context</b>Vendor invoice #4471 for ₹3.2 lakh is 25 days overdue. The vendor has followed up twice. It is pending approval with our finance head.</span>
+        <span class="pl"><b>Task</b>Draft an email to our internal finance team asking for the approval status.</span>
+        <span class="pl"><b>Constraints</b>Polite and brief, under 100 words. Mention the vendor relationship risk without sounding dramatic.</span>
+        <span class="pl"><b>Format</b>Subject line, 2 short paragraphs, and a clear ask with a date.</span>
+      </div>
+      <p style="font-size:17px;margin-top:14px">Compare: <span class="yellow">which of the five elements did you leave out?</span></p>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Practise the five elements</div></div>
+</section>
+
+<!-- 15 ─ The conversation loop -->
+<section class="slide">
+  <div class="tag">It's a conversation</div>
+  <h1>The first answer is a first draft</h1>
+  <div class="rule"></div>
+  <div class="loop">
+    <div class="node">Ask</div><div class="arr">→</div>
+    <div class="node">Read</div><div class="arr">→</div>
+    <div class="node">Refine</div><div class="arr">→</div>
+    <div class="node" style="border-color:var(--green)">Use</div>
+  </div>
+  <p class="lead" style="text-align:center"><b class="yellow">79 of 104</b> of you already refine. <span class="cyan">Make each round count.</span></p>
+  <div class="ask frag" data-f="1" style="max-width:900px;margin:26px auto 0;text-align:center">What do you usually type when the first answer isn't right?<br><span class="muted">Type it in the chat.</span></div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Ask · Read · Refine · Use</div></div>
+</section>
+
+<!-- 16 ─ Activity: which follow-up wins -->
+<section class="slide">
+  <div class="act">Quick poll · Type A or B</div>
+  <h1 style="font-size:36px">Which follow-up gets a better second draft?</h1>
+  <div class="rule" style="margin-bottom:22px"></div>
+  <div class="pair">
+    <div class="opt"><span class="k">A</span>"Make it better."</div>
+    <div class="opt win" data-win="1"><span class="k">B</span>"Cut it to 100 words, put the deadline in the first line, and remove the apology."</div>
+  </div>
+  <div class="why frag" data-f="1">B wins. It says exactly what "better" means.</div>
+  <div class="pair frag" data-f="1">
+    <div class="opt win" data-win="2"><span class="k">A</span>"Block C is 4.2 MW, not 4.8. Fix it, then check every number against the table I pasted."</div>
+    <div class="opt"><span class="k">B</span>"This is wrong."</div>
+  </div>
+  <div class="why frag" data-f="2">A wins. It names the error and asks for a full re-check.</div>
+  <div class="pair frag" data-f="2">
+    <div class="opt"><span class="k">A</span>"Make it more professional."</div>
+    <div class="opt win" data-win="3"><span class="k">B</span>"The reader is our CFO. Keep it formal, avoid technical jargon, and lead with the cost impact."</div>
+  </div>
+  <div class="why frag" data-f="3">B wins. It gives the AI the audience, so it can choose the tone itself.</div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Specific feedback beats vague feedback</div></div>
+</section>
+
+<!-- 17 ─ Five refinement moves -->
+<section class="slide">
+  <div class="tag">Your toolkit</div>
+  <h1>Five moves to get there faster</h1>
+  <div class="rule" style="margin-bottom:24px"></div>
+  <div class="grid5">
+    <div class="card frag" data-f="1"><h3>1. Be specific</h3><div class="ex">"Shorter, firmer, deadline first."</div></div>
+    <div class="card frag" data-f="2"><h3>2. Let it ask you</h3><div class="ex">"Before you draft, ask me up to 5 questions."</div></div>
+    <div class="card frag" data-f="3"><h3>3. Show an example</h3><div class="ex">"Match the style and structure of this letter: […]"</div></div>
+    <div class="card frag" data-f="4"><h3>4. Ask for options</h3><div class="ex">"Give me 3 versions: formal, neutral, short."</div></div>
+    <div class="card frag" data-f="5"><h3>5. Make it check</h3><div class="ex">"Check your draft against my instructions and list what you missed."</div></div>
+  </div>
+  <p class="frag" data-f="6" style="font-size:22px;margin-top:26px">Move 2 = the wallet game in reverse: <span class="cyan">AI asks you for the clues.</span></p>
+  <aside class="notes">1 Say what to change, not just that it's wrong. 2 Let the AI collect the clues it needs. 3 Paste a past letter or report you liked. 4 Choose between versions instead of re-prompting. 5 Have the AI review its own work against your instructions.</aside>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Refine with intent</div></div>
+</section>
+
+<!-- 18 ─ Activity: tone trap -->
+<section class="slide">
+  <div class="act">Activity · Spot the problem</div>
+  <h1 style="font-size:36px">The prompt was "Announce the procurement team merger"</h1>
+  <div class="rule" style="margin-bottom:22px"></div>
+  <div style="display:grid;grid-template-columns:1.1fr .9fr;gap:30px;align-items:start">
+    <div>
+      <div class="lbl">What the AI wrote</div>
+      <div class="ai-out">
+        <b>Exciting news, team!</b><br>
+        We're thrilled to announce that our Mumbai and Delhi procurement teams are coming together as one! This is an amazing new chapter, and a couple of roles will be restructured along the way. Let's embrace the change and make it awesome!
+      </div>
+      <div class="ask">The readers are worried about their jobs.<br><b>What would you add to the prompt?</b></div>
+    </div>
+    <div class="frag" data-f="1">
+      <div class="lbl">The missing clues</div>
+      <div class="better" style="font-size:18px;line-height:1.75">
+        <b>Audience:</b> anxious employees<br><b>Tone:</b> calm, honest, no "exciting"<br><b>Include:</b> what, when, who to ask<br><b>Length:</b> under 150 words
+      </div>
+      <aside class="notes">Full fix: Audience = employees who may be anxious about their roles. Tone = calm, respectful and honest; no exclamation marks, no "exciting" or "thrilled". Must include = what changes, when, who to contact, and that affected colleagues will be spoken to individually. Under 150 words.</aside>
+      <p class="frag" data-f="2" style="font-size:19px;margin-top:16px">A real example from your survey: <span class="yellow">"The tone it generated was overly cheerful… it came across as insensitive."</span></p>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Tone is a clue too</div></div>
+</section>
+
+<!-- B1 ─ Exercise 2: messy notes to minutes -->
+<section class="slide">
+  <div class="act">Hands-on · Meeting summary</div>
+  <h1 style="font-size:38px">Turn these messy notes into minutes</h1>
+  <div class="rule" style="margin-bottom:22px"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start">
+    <div>
+      <div class="lbl">Sample notes (copy from the chat)</div>
+      <div class="notes">review mtg 20 nov – ravi said cable delivery slipping, maybe 1st wk dec, vendor not confirmed. meena to chase vendor. land parcel 14 still pending NOC, legal checking, ETA unclear. safety – 2 near misses last wk at block C, need toolbox talk, suresh. budget: civil overrun approx 6%, finance wants note by next mon. next mtg 27th</div>
+    </div>
+    <div>
+      <div class="lbl">Your task</div>
+      <div class="card" style="font-size:17px;line-height:1.55">Write a prompt using the <b>5 elements</b> to get minutes as a table with columns: <span class="cyan">Item · Status / decision · Owner · Due date</span>.</div>
+      <div style="margin-top:16px;display:flex;gap:14px;align-items:center"><div class="timer" data-sec="480">8:00</div><span class="muted" style="font-size:15px">Then share your table on screen</span></div>
+      <div class="ask frag" data-f="1">Before you share: <b>check the Due date column.</b><br>Is every date really in the notes?</div>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Applied exercise · Meeting summaries</div></div>
+</section>
+
+<!-- B2 ─ Verify the minutes -->
+<section class="slide">
+  <div class="act">Spot the problem</div>
+  <h1 style="font-size:38px">What most AI tools give back</h1>
+  <div class="rule" style="margin-bottom:20px"></div>
+  <table class="mins">
+    <tr><th>Item</th><th>Status / decision</th><th>Owner</th><th>Due date</th></tr>
+    <tr><td>Cable delivery</td><td>Slipping to 1st week of Dec; vendor not confirmed</td><td>Meena</td><td><span class="flagable" data-win="1">25 Nov</span></td></tr>
+    <tr><td>Land parcel 14</td><td>NOC pending; Legal reviewing</td><td>Legal</td><td><span class="flagable" data-win="1">30 Nov</span></td></tr>
+    <tr><td>Safety, Block C</td><td>2 near misses; toolbox talk needed</td><td>Suresh</td><td><span class="flagable" data-win="1">Immediately</span></td></tr>
+    <tr><td>Civil budget</td><td>~6% overrun; note for Finance</td><td>Finance</td><td>Mon, 23 Nov</td></tr>
+  </table>
+  <div class="frag" data-f="1" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:18px">
+    <div class="flagnote" style="font-size:20px;line-height:1.5">3 due dates were invented.<br>None were in the notes.</div>
+    <div class="better frag" data-f="2" style="font-size:17px"><b>Add:</b> "Quote the source for each row. If it's not stated, write <i>Not stated</i>."</div>
+    <aside class="notes">Also point out: the budget note's owner is unclear. Finance wants it, but who writes it? The 23 Nov date is genuine ('by next Mon' from 20 Nov).</aside>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Verify before you send</div></div>
+</section>
+
+<!-- K1 ─ Four ideas in every AI tool -->
+<section class="slide">
+  <div class="tag">Beyond prompts</div>
+  <h1>The same 4 ideas, in every AI tool</h1>
+  <div class="rule" style="margin-bottom:24px"></div>
+  <div class="grid4">
+    <div class="card frag" data-f="1"><div class="letter">1</div><h3>Prompt</h3><div class="q">What you type, once</div><div class="ex">Today's instructions to the new joiner</div></div>
+    <div class="card frag" data-f="2"><div class="letter">2</div><h3>Skill</h3><div class="q">Saved instructions, reused</div><div class="ex">The SOP binder they keep on their desk</div></div>
+    <div class="card frag" data-f="3"><div class="letter">3</div><h3>Connector</h3><div class="q">Access to your apps (MCP)</div><div class="ex">The access card to email, Drive, calendar</div></div>
+    <div class="card frag" data-f="4"><div class="letter" style="background:var(--green)">4</div><h3>Agent</h3><div class="q">Does multi-step work for you</div><div class="ex">Trusted to run the task end to end</div></div>
+  </div>
+  <p class="frag muted" data-f="5" style="font-size:17px;margin-top:26px">Skills: Gemini and Claude call them skills · ChatGPT has GPTs and Projects · Copilot has agents</p>
+  <aside class="notes">Use the new-joiner analogy from Module 2. Prompt = what you tell them today. Skill = written SOP they reuse (Gemini Gems became Skills in Nov 2026). Connector = an access card to a system; MCP (Model Context Protocol) is a common "plug" standard many AI tools now use to connect to apps. Agent = you hand over a whole multi-step task (research, compare, draft) and check the result. Names differ by tool; the ideas are the same. Copilot connectors and agents depend on Apraava's licence and IT settings.</aside>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Prompt · Skill · Connector · Agent</div></div>
+</section>
+
+<!-- K2 ─ Game: which one is it -->
+<section class="slide">
+  <div class="act">Game · Type the number and the letter</div>
+  <h1 style="font-size:36px">Prompt (P), Skill (S), Connector (C) or Agent (A)?</h1>
+  <div style="display:flex;align-items:center;gap:16px;margin:-4px 0 20px"><div class="timer" data-sec="90">1:30</div><span class="muted" style="font-size:15px">e.g. "1P, 2S…"</span></div>
+  <div class="sort">
+    <div class="row"><span><span class="n">1</span>"Rewrite this email more politely"</span><span class="pill g frag" data-f="1">Prompt</span></div>
+    <div class="row"><span><span class="n">2</span>A saved "mom-maker" for every meeting</span><span class="pill a frag" data-f="1" style="background:color-mix(in srgb, var(--blue) 18%, transparent);color:var(--blue)">Skill</span></div>
+    <div class="row"><span><span class="n">3</span>AI reads your calendar to find a free slot</span><span class="pill a frag" data-f="1">Connector</span></div>
+    <div class="row"><span><span class="n">4</span>AI researches 20 vendor sites and writes a comparison on its own</span><span class="pill r frag" data-f="1" style="background:color-mix(in srgb, var(--green) 18%, transparent);color:var(--green)">Agent</span></div>
+    <div class="row"><span><span class="n">5</span>Copilot pulls last month's numbers from a SharePoint file</span><span class="pill a frag" data-f="1">Connector</span></div>
+    <div class="row"><span><span class="n">6</span>A "safety-alert-writer" every HSSE officer uses</span><span class="pill a frag" data-f="1" style="background:color-mix(in srgb, var(--blue) 18%, transparent);color:var(--blue)">Skill</span></div>
+  </div>
+  <aside class="notes">Fastest correct answer in the chat wins bragging rights. Item 4 is the one people argue about: it uses search (a connector) but runs many steps on its own, which makes it an agent.</aside>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Quick game</div></div>
+</section>
+
+<!-- K3 ─ Game: would you give it the keys -->
+<section class="slide">
+  <div class="act">Poll · Yes or No in the chat</div>
+  <h1 style="font-size:38px">Would you give the AI this access card?</h1>
+  <div class="rule" style="margin-bottom:22px"></div>
+  <div class="sort" style="grid-template-columns:1fr">
+    <div class="row"><span><span class="n">1</span>Read my calendar to suggest meeting times</span><span class="pill g frag" data-f="1">Yes, low risk</span></div>
+    <div class="row"><span><span class="n">2</span>Read my work inbox to draft replies</span><span class="pill a frag" data-f="1">Only in the approved tool</span></div>
+    <div class="row"><span><span class="n">3</span>Send emails to vendors on my behalf, unchecked</span><span class="pill r frag" data-f="1">No</span></div>
+    <div class="row"><span><span class="n">4</span>Open the HR folder with salary files</span><span class="pill r frag" data-f="1">No: DPDP</span></div>
+  </div>
+  <p class="frag" data-f="2" style="font-size:23px;margin-top:24px">Every connector is an access card. <span class="cyan">Give the least access the task needs.</span></p>
+  <aside class="notes">Link back to the ₹250 crore slide: a connector that can read salary or Aadhaar data is exactly where a breach happens. Rule of thumb: read-only before write, your own data before team data, and always review before anything is sent.</aside>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Connectors and access</div></div>
+</section>
+
+<!-- K4 ─ Activity: Skill Coach -->
+<section class="slide">
+  <div class="act">Activity · 5 minutes</div>
+  <h1>Ask the Skill Coach what to build</h1>
+  <div class="rule" style="margin-bottom:22px"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:start">
+    <div>
+      <ol style="font-size:21px;line-height:1.8;padding-left:24px;margin:0">
+        <li>Copy the <b class="cyan">Skill Coach</b> prompt from the chat</li>
+        <li>Paste it into any AI: Gemini, ChatGPT, Copilot</li>
+        <li>Type your role and daily tasks</li>
+      </ol>
+      <div style="margin-top:18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+        <button class="btn copybtn" data-target="coachTxt">Copy Skill Coach prompt</button><span class="muted copymsg" style="font-size:15px"></span>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:14px;align-items:center"><div class="timer" data-sec="300">5:00</div><span class="muted" style="font-size:15px">Sample data only</span></div>
+    </div>
+    <div class="frag" data-f="1">
+      <div class="lbl">What it suggests (example)</div>
+      <table class="mins" style="font-size:15px">
+        <tr><th>#</th><th>Skill</th><th>You paste</th><th>You get</th></tr>
+        <tr><td>1</td><td><b>dgr-summariser</b></td><td>Daily figures</td><td>DGR in your format</td></tr>
+        <tr><td>2</td><td><b>contractor-follow-up</b></td><td>Pending items</td><td>Polite, firm email</td></tr>
+        <tr><td>3</td><td><b>weekly-report-builder</b></td><td>Daily notes</td><td>One-page summary</td></tr>
+      </table>
+      <p class="frag" data-f="2" style="font-size:19px;margin-top:16px">Reply <b>1, 2 or 3</b> and it <span class="cyan">writes the skill for you.</span></p>
+    </div>
+  </div>
+  <pre id="coachTxt" style="display:none">You are &quot;Skill Coach&quot;, a friendly AI productivity coach for employees of a renewable energy company in India that runs wind, solar and transmission projects. You help me find the best everyday tasks to turn into a reusable AI skill (a saved set of instructions), and you write the skill for me.
+
+HOW TO START
+Greet me in one short line. Ask me to tell you, in my own words:
+1. My role and team (for example: site O&amp;M engineer, HSSE, projects/PMO, finance, HR, procurement, legal, metering).
+2. The tasks I do every day or every week, especially the repetitive ones.
+If my answer is very short, ask up to 3 short follow-up questions (how often, how long it takes, what goes in and what comes out). Never ask more than 3 questions before giving suggestions.
+
+SUGGEST 3 SKILLS
+1. Pick the 3 tasks that are the best fit for a skill. A good skill task:
+   - repeats often (daily or weekly),
+   - follows the same pattern each time,
+   - takes text in and gives text out (notes, emails, reports, checklists, summaries, letters),
+   - does not need live system data, exact calculations or final decisions.
+2. Show them in a table: # | Skill name (lowercase-with-hyphens) | What I paste in | What I get back | Rough time saved per week. Say clearly that time saved is an estimate.
+3. If any task I mentioned should NOT be a skill, add one line saying which and why (for example: legal sign-off, exact technical specs, confidential HR decisions, anything needing live data).
+4. End with: &quot;Which one should we build first? Reply 1, 2 or 3.&quot;
+
+WHEN I PICK ONE
+Give me:
+- Name: lowercase words joined by hyphens, maximum 4 words (for example: safety-alert-writer).
+- Description: one sentence saying what the skill does and when to use it.
+- Instructions: inside ONE code block, using exactly these headings: Role / Context / Task / Constraints / Format.
+
+Rules for the instructions you write:
+- Simple, plain English. Under 250 words.
+- Always include these constraints: use only information I provide; never invent names, dates, figures, clauses or references; write &quot;Not stated&quot; when information is missing; list anything I should double-check before sending.
+- Use [square brackets] for details I must fill in about my own work (for example [site name], [report format], [manager&#x27;s name]).
+
+Then give:
+- One short sample input to test the skill, using made-up data only.
+- How to save it:
+  Gemini: gemini.google.com &gt; Customize &gt; Skills &gt; Create &gt; Create manually &gt; paste name, description and instructions &gt; Create. Use it by typing / and the skill name.
+  Other tools: save the instructions in a Project, custom assistant or agent if your plan allows, or keep them in a note and paste them at the start of a chat.
+
+DATA SAFETY (always)
+- Remind me once, briefly: use sample or masked data only. No phone numbers, Aadhaar, PAN, bank details, salaries, health information, customer data or confidential company documents.
+- If I paste something that looks like personal or confidential data, stop and ask me to mask it first (for example [Employee A], [Vendor X], [Site]).
+
+STYLE
+- Friendly, encouraging and short. Use bullets and tables, not long paragraphs.
+- If I write in Hindi or Hinglish, reply in the same style.
+- Never claim a skill can connect to company systems such as SAP, Oracle, SCADA or email unless I say so.
+
+Start now.</pre>
+  <aside class="notes">Click "Copy Skill Coach prompt" and paste it into the Teams chat (or paste from skills/1_Skill_Coach_prompt.txt). It works as a plain prompt in any tool, so nobody needs a special account. Example input: "I'm a site engineer at a wind farm. Daily I prepare the DGR, email contractors about pending work and update the fault tracker. Weekly I send a progress report." Ask 2 or 3 people to read out their suggestions.</aside>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Skill Coach</div></div>
+</section>
+
+<!-- K5 ─ Build one together -->
+<section class="slide">
+  <div class="act">Live demo · Follow along in Gemini</div>
+  <h1>Let's build one together: <span class="cyan">mom-maker</span></h1>
+  <div class="rule" style="margin-bottom:26px"></div>
+  <div class="grid4">
+    <div class="card frag" data-f="1"><div class="letter">1</div><h3>Open</h3><div class="ex">gemini.google.com → Customize → Skills</div></div>
+    <div class="card frag" data-f="2"><div class="letter">2</div><h3>Create</h3><div class="ex">Create → Create manually</div></div>
+    <div class="card frag" data-f="3"><div class="letter">3</div><h3>Fill in</h3><div class="ex">Name: mom-maker<br>+ description + instructions</div></div>
+    <div class="card frag" data-f="4"><div class="letter" style="background:var(--green)">4</div><h3>Use it</h3><div class="ex">Type <b>/mom-maker</b> + paste notes</div></div>
+  </div>
+  <div style="margin-top:28px;display:flex;gap:14px;align-items:center"><div class="timer" data-sec="480">8:00</div><span class="muted" style="font-size:16px">Instructions on the next slide</span></div>
+  <aside class="notes">Customize is in the left sidebar (under "More" if hidden). Skill names must be lowercase with hyphens; Gemini fixes the format. Google says "@" is replacing "/" as the shortcut, so if /mom-maker doesn't work, try @mom-maker. Backup if time is short: Create → Upload → the skills/mom-maker folder. If someone's account has no Skills option, they paste the instructions at the start of a normal chat instead.</aside>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Build a skill</div></div>
+</section>
+
+<!-- K6 ─ mom-maker instructions -->
+<section class="slide">
+  <div class="tag">Paste into the skill's Instructions box</div>
+  <h1 style="font-size:36px">mom-maker: the instructions</h1>
+  <div class="rule" style="margin-bottom:16px"></div>
+  <div class="template" id="momTpl" style="font-size:14.5px;line-height:1.6;padding:16px 22px"><span class="k">Role:</span> You are a meeting-minutes assistant at a renewable energy company in India.<br>
+<span class="k">Context:</span> I will paste rough meeting notes. They may be short, informal and full of abbreviations.<br>
+<span class="k">Task:</span> Turn the notes into clear, professional minutes of meeting.<br>
+<span class="k">Constraints:</span><br>
+- Use only what is in the notes. Never invent names, dates, numbers or decisions.<br>
+- If an owner or due date is missing, write "Not stated".<br>
+- Neutral, professional tone. Simple English.<br>
+- If anything is unclear, list it under "Please check".<br>
+<span class="k">Format:</span><br>
+1. Meeting title, date, and next meeting date (if given)<br>
+2. Key points: up to 5 bullets<br>
+3. Action table: # | Action | Owner | Due date | Source (exact words from the notes)<br>
+4. Please check: questions to confirm before sending</div>
+  <div style="display:flex;gap:16px;align-items:center;margin-top:14px">
+    <button class="btn copybtn" data-target="momTpl">Copy instructions</button><span class="muted copymsg" style="font-size:15px"></span>
+  </div>
+  <aside class="notes">Description to paste: "Turns rough meeting notes into clean minutes of meeting with an action table. Use whenever I paste meeting notes and ask for minutes or a MoM." Point out the 5 elements: the framework from Module 2, saved once. "Not stated" and the Source column fix the invented-dates problem they just saw.</aside>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>mom-maker</div></div>
+</section>
+
+<!-- K7 ─ Test it -->
+<section class="slide">
+  <div class="act">Test it · Type "it works" in the chat</div>
+  <h1>Type /mom-maker and paste the same notes</h1>
+  <div class="rule"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:start">
+    <div>
+      <div class="lbl">Check for</div>
+      <ul style="font-size:21px;line-height:1.9;margin:0;padding-left:22px">
+        <li>Missing dates say <b class="green">Not stated</b></li>
+        <li>Every action has a <b class="green">source quote</b></li>
+        <li>A <b class="green">Please check</b> list at the end</li>
+      </ul>
+    </div>
+    <div class="frag" data-f="1">
+      <div class="ask" style="margin-top:0;font-size:21px">Tonight: build the skill the <b>Skill Coach</b> suggested for <span class="yellow">your</span> task.</div>
+      <p class="frag" data-f="2" style="font-size:18px;margin-top:16px"><span class="red">Sample or masked data only.</span> <span class="muted">Ask IT before using it for real work.</span></p>
+    </div>
+  </div>
+  <aside class="notes">Same notes as the earlier exercise, but now the dates aren't invented, with no extra typing. If someone's output still invents a date, check they pasted the Constraints section. Close the loop: prompt framework → saved as a skill → reused daily.</aside>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Test your skill</div></div>
+</section>
+
+<!-- 19 ─ Template + takeaway -->
+<section class="slide">
+  <div class="tag">Take this with you</div>
+  <h1>Your reusable prompt template</h1>
+  <div class="rule" style="margin-bottom:22px"></div>
+  <div class="template" id="tpl"><span class="k">Act as</span> <span class="ph">[role]</span>.<br>
+<span class="k">Context:</span> <span class="ph">[what's happening, who's involved, any history]</span>.<br>
+<span class="k">Task:</span> <span class="ph">[exactly what you need]</span>.<br>
+<span class="k">Constraints:</span> <span class="ph">[audience, tone, length, must include / avoid]</span>.<br>
+<span class="k">Format:</span> <span class="ph">[email / table / bullets / slides]</span>.<br>
+Before you start, ask me any questions you need.</div>
+  <div style="display:flex;gap:16px;align-items:center;margin-top:18px">
+    <button class="btn" id="copyTpl">Copy template</button><span class="muted" id="copyMsg" style="font-size:15px"></span>
+  </div>
+  <div class="grid3" style="margin-top:26px">
+    <div class="card"><h3 class="cyan">More clues, better answers</h3><div class="q" style="margin:0">Context is your job.</div></div>
+    <div class="card"><h3 class="cyan">It's a conversation</h3><div class="q" style="margin:0">Refine with specific feedback.</div></div>
+    <div class="card"><h3 class="cyan">Save what works</h3><div class="q" style="margin:0">Turn good prompts into templates.</div></div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>www.eastwayai.com</div></div>
+</section>
+
+<!-- C0 ─ Bonus divider -->
+<section class="slide">
+  <div class="center">
+    <div class="tag">If time allows</div>
+    <h1 class="huge">Bonus exercises</h1>
+    <p class="lead muted">Pick the ones that fit the room. Press <b style="color:var(--text)">W</b> to jump straight to the wrap-up.</p>
+    <ul class="agenda" style="margin-top:20px">
+      <li><span class="t">R1</span>Excel formulas you can trust</li>
+      <li><span class="t">R2</span>Reviewing a procedure against a checklist</li>
+      <li><span class="t">R3</span>Combining 3 contractor updates</li>
+      <li><span class="t">R4</span>From report to slide outline</li>
+      <li><span class="t">R5</span>Open clinic: your tasks, live</li>
+    </ul>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Reserve exercises</div></div>
+</section>
+
+<!-- R1 ─ Excel -->
+<section class="slide">
+  <div class="act">Bonus R1 · Excel</div>
+  <h1 style="font-size:38px">Ask for the formula and a way to test it</h1>
+  <div class="rule" style="margin-bottom:22px"></div>
+  <div class="lbl">Prompt</div>
+  <div class="notes" style="font-size:17px">My sheet has: column A = Date, column B = Turbine ID, column C = Generation (kWh).<br>Write a formula for the total October 2026 generation of turbine WTG-07. Explain each part in simple words. Then give me a 3-row test case so I can check it works.</div>
+  <div style="margin-top:16px;display:flex;gap:14px;align-items:center"><div class="timer" data-sec="300">5:00</div></div>
+  <div class="frag" data-f="1" style="margin-top:18px">
+    <div class="lbl">One correct answer</div>
+    <div class="formula" style="font-size:17px">=SUMIFS(C:C, B:B, "WTG-07", A:A, "&gt;="&amp;DATE(2026,10,1), A:A, "&lt;"&amp;DATE(2026,11,1))</div>
+    <p style="font-size:18px;margin-top:12px"><span class="cyan">The lesson:</span> a test case turns an amber answer into a checked one.</p>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Bonus · Excel</div></div>
+</section>
+
+<!-- R2 ─ Document review -->
+<section class="slide">
+  <div class="act">Bonus R2 · Document review</div>
+  <h1 style="font-size:36px">Check a procedure, and make AI show its evidence</h1>
+  <div class="rule" style="margin-bottom:20px"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start">
+    <div>
+      <div class="lbl">Sample procedure (copy from the chat)</div>
+      <div class="samplebox"><b>Work at Height – SOP (sample)</b><br>1. All work above 1.8 m needs a valid work permit.<br>2. Inspect the full-body harness before every use.<br>3. A supervisor must be present throughout the task.<br>4. Tools used at height must be tethered.</div>
+      <div class="lbl" style="margin-top:14px">Checklist</div>
+      <div class="samplebox">Permit · Harness inspection · Anchor point · Rescue plan · Tool tethering</div>
+    </div>
+    <div>
+      <div class="lbl">Prompt</div>
+      <div class="notes" style="font-size:14.5px">Check this procedure against the 5-point checklist. For each point, say Covered or Not covered, and quote the exact line you relied on. If it isn't in the text, write "Not found". Do not assume.</div>
+      <div class="better frag" data-f="1" style="margin-top:14px"><b>Expected:</b> Anchor point and Rescue plan are <b>Not found</b>.</div>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Bonus · Policy and document review</div></div>
+</section>
+
+<!-- R3 ─ Consolidate updates -->
+<section class="slide">
+  <div class="act">Bonus R3 · Consolidation</div>
+  <h1 style="font-size:36px">Three updates in, one summary out</h1>
+  <div class="rule" style="margin-bottom:20px"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="samplebox"><b>Civil contractor:</b> Block B foundations 14/20 done. 2 days behind due to rain. Shuttering crew increased from Monday.</div>
+      <div class="samplebox"><b>Electrical contractor:</b> Cable laying Section 3 complete. Section 4 waiting on 1.2 km of cable. Supplier says dispatch on 30 Nov.</div>
+      <div class="samplebox"><b>Substation team (WhatsApp):</b> transformer plinth done. testing team not reached site, ETA unknown.</div>
+    </div>
+    <div>
+      <div class="lbl">Prompt</div>
+      <div class="notes" style="font-size:14.5px">Combine these into one management summary table: Contractor · Progress · Issue · RAG status · Action needed. Green = on track, Amber = up to 3 days late, Red = blocked. Use only facts from the updates. Do not add anything.</div>
+      <p class="frag" data-f="1" style="font-size:19px;margin-top:14px">Discuss: <span class="yellow">is the substation Amber or Red?</span></p>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Bonus · Reports</div></div>
+</section>
+
+<!-- R4 ─ Report to slides -->
+<section class="slide">
+  <div class="act">Bonus R4 · Presentations</div>
+  <h1 style="font-size:38px">From a report to a slide outline</h1>
+  <div class="rule" style="margin-bottom:22px"></div>
+  <div class="lbl">Prompt</div>
+  <div class="notes" style="font-size:17px">Turn this report into a 6-slide outline for the monthly management review. The audience is leadership and they have 10 minutes. For each slide give: a headline that states the conclusion, 3 short bullets, and one suggested chart.<br><br>[paste report]</div>
+  <p class="frag" data-f="1" style="font-size:21px;margin-top:20px">"Generation fell 8% on low wind" beats "Generation update".</p>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Bonus · Presentations</div></div>
+</section>
+
+<!-- R5 ─ Clinic -->
+<section class="slide">
+  <div class="center">
+    <div class="act">Bonus R5 · Open clinic</div>
+    <h1 class="huge">Your tasks, live</h1>
+    <p class="lead">Remember the warm-up question: <i>"one task you'd hand off to AI tomorrow"</i>?<br>Let's build prompts for 3 or 4 of them together, using the 5 elements.</p>
+    <p class="muted" style="font-size:17px;margin-top:8px">Use sample details only. Change names and numbers.</p>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Bonus · Clinic</div></div>
+</section>
+
+<!-- W1 ─ Wrap-up: five-point check -->
+<section class="slide" data-id="wrap">
+  <div class="tag">Wrap-up</div>
+  <h1>Before you send anything AI wrote</h1>
+  <div class="rule" style="margin-bottom:24px"></div>
+  <div class="check">
+    <div class="card frag" data-f="1"><div class="letter">1</div><h3>Facts</h3><div class="q">Checked against your source document?</div></div>
+    <div class="card frag" data-f="2"><div class="letter">2</div><h3>Figures</h3><div class="q">Numbers recalculated, assumptions known?</div></div>
+    <div class="card frag" data-f="3"><div class="letter">3</div><h3>References</h3><div class="q">Laws, clauses and citations confirmed in the original?</div></div>
+    <div class="card frag" data-f="4"><div class="letter">4</div><h3>Tone</h3><div class="q">Right for this audience and this moment?</div></div>
+    <div class="card frag" data-f="5"><div class="letter">5</div><h3>Data</h3><div class="q">Nothing confidential went into a public tool?</div></div>
+  </div>
+  <p class="frag" data-f="6" style="font-size:22px;margin-top:26px">AI writes the first draft. <span class="cyan">You own the final one.</span></p>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Your 5-point check</div></div>
+</section>
+
+<!-- W2 ─ Homework + exit poll -->
+<section class="slide">
+  <div class="tag">Before Session 2 · 1 December</div>
+  <h1>Your homework (15 minutes)</h1>
+  <div class="rule"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start">
+    <div>
+      <ol style="font-size:20px;line-height:1.7;padding-left:24px;margin:0">
+        <li>Take your running example from today.</li>
+        <li>Build the skill the <b>Skill Coach</b> suggested for you.</li>
+        <li>Test it with sample data. Ask IT before real use.</li>
+        <li>Bring what it produced to Session 2.</li>
+      </ol>
+      <div class="card" style="margin-top:22px"><h3 class="cyan" style="font-size:18px">Coming up in Session 2</h3><div class="q" style="margin:0;font-size:16px">AI inside Microsoft 365 (Word, Excel, PowerPoint, Outlook, Teams) and choosing the right tool for each task.</div></div>
+    </div>
+    <div class="ask" style="margin-top:0;font-size:22px">
+      <b>Exit poll</b><br>Type in the chat: <span class="yellow">one thing you'll do differently tomorrow.</span>
+      <div style="margin-top:16px"><div class="timer" data-sec="90">1:30</div></div>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Next steps</div></div>
+</section>
+
+<!-- W3 ─ Thank you -->
+<section class="slide">
+  <div class="center" style="align-items:center;text-align:center">
+    <div style="width:92px;height:92px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;margin-bottom:22px"><img src="img/logo.png" alt="EastwayAI logo" style="width:58px;height:58px"></div>
+    <h1 class="huge">Thank you</h1>
+    <p class="lead">Questions?</p>
+    <p class="lead cyan" style="margin-top:10px">More clues, better answers.</p>
+    <p class="muted" style="font-size:16px;margin-top:20px">www.eastwayai.com</p>
+  </div>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Session 1 complete</div></div>
+</section>
+
+</div></div>
+<div id="progress"></div>
+<div id="hint">← → or click · F full screen</div>
+
+<script src="deck.js"></script>
+</body>
+</html>
