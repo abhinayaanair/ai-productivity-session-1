@@ -547,12 +547,12 @@
 <!-- D5 ─ Colab masking tool -->
 <section class="slide">
   <div class="act">Try it · 5 minutes</div>
-  <h1>Mask a resume before AI reads it</h1>
+  <h1>Mask a PDF before AI reads it</h1>
   <div class="rule" style="margin-bottom:22px"></div>
   <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:30px;align-items:start">
     <div>
       <ol style="font-size:20px;line-height:1.75;padding-left:24px;margin:0">
-        <li>Download the <a href="samples/sample_resume.pdf" target="_blank" rel="noopener" style="color:var(--cyan);font-weight:600">sample resume</a></li>
+        <li>Download the <a href="samples/sample_document.pdf" target="_blank" rel="noopener" style="color:var(--cyan);font-weight:600">sample PDF</a></li>
         <li>Open the <a href="https://colab.research.google.com/drive/1sQV1MZaLuhTuoYz8avGOBVvQwysqWE5n" target="_blank" rel="noopener" style="color:var(--cyan);font-weight:600">masking notebook</a></li>
         <li>Click <b>▶</b> on Steps 1, 2 and 3</li>
         <li>Step 4: <b>Choose PDFs</b> → <b>Process Files</b></li>
@@ -568,10 +568,10 @@
         <b>First time?</b> Colab asks you to sign in and shows a warning. Click <b class="cyan">Run anyway</b>.
       </div>
       <div style="margin-top:16px;display:flex;gap:14px;align-items:center"><div class="timer" data-sec="300">5:00</div></div>
-      <p style="font-size:17px;margin-top:14px"><span class="red">Sample resume only.</span> <span class="muted">Ask IT before masking real CVs.</span></p>
+      <p style="font-size:17px;margin-top:14px"><span class="red">Sample PDF only.</span> <span class="muted">Ask IT before masking real documents.</span></p>
     </div>
   </div>
-  <aside class="notes">Paste the notebook link and the sample resume link in the Teams chat. The sample resume is at samples/sample_resume.pdf on the deck's site (made-up data). Step 7 saves masked PDFs inside Colab, not on the laptop: to keep one, open the folder icon on Colab's left sidebar and download it. Colab runs on Google's cloud, so the file does leave the computer. Fine for the sample; real CVs need an IT-approved tool.</aside>
+  <aside class="notes">Paste the notebook link and the sample PDF link in the Teams chat. The sample PDF (samples/sample_document.pdf on the deck's site) is a made-up employee record. Step 7 saves masked PDFs inside Colab, not on the laptop: to keep one, open the folder icon on Colab's left sidebar and download it. Colab runs on Google's cloud, so the file does leave the computer. Fine for the sample; real documents need an IT-approved tool.</aside>
   <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Masking tool</div></div>
 </section>
 
@@ -583,20 +583,20 @@
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:start">
     <div>
       <div class="lbl">Before</div>
-      <div class="samplebox" style="font-size:13.5px;line-height:1.7">Rohan Mehta<br>rohan.mehta.demo@example.com | +91 98765 43210<br>21 Park Street, Kolkata 700016<br>Date of Birth: 14/03/1992 | Aadhaar: 1234 5678 9012 | PAN: ABCDE1234F<br>Site O&amp;M engineer with 8 years… Reported to Anita Sharma…<br>EXPERIENCE<br>Senior O&amp;M Engineer…<br>B.Tech Electrical…</div>
+      <div class="samplebox" style="font-size:13.5px;line-height:1.7">Rohan Mehta<br>rohan.mehta.demo@example.com | +91 98765 43210<br>21 Park Street, Kolkata 700016<br>Date of Birth: 14/03/1992 | Aadhaar: 1234 5678 9012 | PAN: ABCDE1234F<br>Senior O&amp;M Engineer at a 120 MW wind site… Joined Jun 2019. B.Tech Electrical<br>Bank account: 50100234567890<br>Emergency contact: Priya Mehta, 98300 12345</div>
     </div>
     <div>
       <div class="lbl">After (actual output)</div>
-      <div class="samplebox" style="font-size:13.5px;line-height:1.7">[NAME]<br>[EMAIL] | +91 [PHONE]<br>[ADDRESS]<span class="flagable" data-win="1">700016</span><br>[DATE_OF_BIRTH] | Aadhaar: <span class="flagable" data-win="1">1234 5678 9012</span> | PAN: <span class="flagable" data-win="1">ABCDE1234F</span><br>…with <span class="flagable" data-win="2">[ADDRESS]</span>&amp;M Engineer…<br><span class="flagable" data-win="2">[URL]</span> Electrical…</div>
+      <div class="samplebox" style="font-size:13.5px;line-height:1.7">[NAME]<br>[EMAIL] | +91 [PHONE]<br>[ADDRESS]<span class="flagable" data-win="1">700016</span><br>[DATE_OF_BIRTH] | Aadhaar: <span class="flagable" data-win="1">1234 5678 9012</span> | PAN: <span class="flagable" data-win="1">ABCDE1234F</span><br>Senior O&amp;M Engineer at a <span class="flagable" data-win="2">[ADDRESS]</span>2019. <span class="flagable" data-win="2">[URL]</span> Electrical<br>Bank account: <span class="flagable" data-win="1">5010</span>[PHONE]<br>Emergency contact: <span class="flagable" data-win="1">Priya Mehta</span>, [PHONE]</div>
       <div style="margin-top:10px;display:flex;gap:14px;align-items:center"><div class="timer" data-sec="60">1:00</div><span class="muted" style="font-size:15px">Type what you spot</span></div>
     </div>
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:16px">
-    <p class="frag" data-f="1" style="font-size:18px;margin:0"><span class="red"><b>Missed:</b></span> Aadhaar, PAN, PIN code</p>
-    <p class="frag" data-f="2" style="font-size:18px;margin:0"><span class="amber" style="color:var(--amber)"><b>Over-masked:</b></span> the Experience heading, and "B.Tech"</p>
+    <p class="frag" data-f="1" style="font-size:18px;margin:0"><span class="red"><b>Missed:</b></span> Aadhaar, PAN, PIN, a name, part of the bank account</p>
+    <p class="frag" data-f="2" style="font-size:18px;margin:0"><span class="amber" style="color:var(--amber)"><b>Over-masked:</b></span> the job details, and "B.Tech"</p>
   </div>
   <p class="frag" data-f="3" style="font-size:24px;margin-top:18px">Masking tools help. <span class="cyan">They don't replace your eyes.</span></p>
-  <aside class="notes">This is the real output of the notebook on the sample resume. It was built for US-style resumes, so it doesn't know Aadhaar, PAN or 6-digit PIN codes. It also missed "Anita Sharma" (a manager's name in the body text) and swallowed part of the Summary plus the Experience heading into [ADDRESS] ("St"/"Dr"-style street words). "B.Tech" became [URL] because ".tech" looks like a web domain. Lesson: always read the masked text before you paste it into an AI tool. Ties back to the traffic light: treat the tool's output as amber.</aside>
+  <aside class="notes">This is the real output of the notebook on the sample PDF. Its patterns are built for US-style data (SSN, 5-digit ZIP), so it doesn't know Aadhaar, PAN, IFSC or 6-digit PIN codes. It masked only the top name, so the emergency contact "Priya Mehta" stays visible. The bank account was half-masked as a phone number, leaving "5010" visible. It also swallowed "120 MW wind site… Reports to Anita Sharma… Joined Jun" into [ADDRESS], and turned "B.Tech" into [URL] because ".tech" looks like a web domain. Lesson: always read the masked text before you paste it into an AI tool. Treat the tool's output as amber.</aside>
   <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Verify the masking</div></div>
 </section>
 
