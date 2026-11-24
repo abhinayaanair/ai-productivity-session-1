@@ -546,33 +546,58 @@
 
 <!-- D5 ─ Colab masking tool -->
 <section class="slide">
-  <div class="act">Try it · 3 minutes</div>
-  <h1>Mask your data before you prompt</h1>
+  <div class="act">Try it · 5 minutes</div>
+  <h1>Mask a resume before AI reads it</h1>
   <div class="rule" style="margin-bottom:22px"></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:start">
+  <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:30px;align-items:start">
     <div>
-      <ol style="font-size:21px;line-height:1.8;padding-left:24px;margin:0">
+      <ol style="font-size:20px;line-height:1.75;padding-left:24px;margin:0">
+        <li>Download the <a href="samples/sample_resume.pdf" target="_blank" rel="noopener" style="color:var(--cyan);font-weight:600">sample resume</a></li>
         <li>Open the <a href="https://colab.research.google.com/drive/1sQV1MZaLuhTuoYz8avGOBVvQwysqWE5n" target="_blank" rel="noopener" style="color:var(--cyan);font-weight:600">masking notebook</a></li>
-        <li>Click <b>▶ Run</b></li>
-        <li>Paste your text, copy the masked version</li>
-        <li>Use the masked text in any AI tool</li>
+        <li>Click <b>▶</b> on Steps 1, 2 and 3</li>
+        <li>Step 4: <b>Choose PDFs</b> → <b>Process Files</b></li>
+        <li>Click <b>▶</b> on Steps 5 and 6</li>
       </ol>
-      <div style="margin-top:18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+      <div style="margin-top:16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap">
         <button class="btn copybtn" data-target="colabUrl">Copy notebook link</button><span class="muted copymsg" style="font-size:15px"></span>
       </div>
       <span id="colabUrl" style="display:none">https://colab.research.google.com/drive/1sQV1MZaLuhTuoYz8avGOBVvQwysqWE5n</span>
-      <div style="margin-top:16px;display:flex;gap:14px;align-items:center"><div class="timer" data-sec="180">3:00</div><span class="muted" style="font-size:15px">Works in any browser · Google sign-in needed</span></div>
     </div>
-    <div class="frag" data-f="1">
-      <div class="lbl">Before</div>
-      <div class="notes" style="font-size:15px">Warning letter to <span class="flagable on2">Ramesh Kumar</span>, phone <span class="flagable on2">98765 43210</span>, Aadhaar <span class="flagable on2">1234 5678 9012</span></div>
-      <div class="lbl" style="margin-top:16px">After</div>
-      <div class="notes" style="font-size:15px">Warning letter to <span class="cyan">[NAME]</span>, phone <span class="cyan">[PHONE]</span>, Aadhaar <span class="cyan">[AADHAAR]</span></div>
-      <p class="frag" data-f="2" style="font-size:18px;margin-top:14px"><span class="red">Practise with the sample letter.</span> <span class="muted">Ask IT before masking real data.</span></p>
+    <div>
+      <div class="card" style="font-size:16px;line-height:1.6">
+        <b>First time?</b> Colab asks you to sign in and shows a warning. Click <b class="cyan">Run anyway</b>.
+      </div>
+      <div style="margin-top:16px;display:flex;gap:14px;align-items:center"><div class="timer" data-sec="300">5:00</div></div>
+      <p style="font-size:17px;margin-top:14px"><span class="red">Sample resume only.</span> <span class="muted">Ask IT before masking real CVs.</span></p>
     </div>
   </div>
-  <aside class="notes">Paste the notebook link in the Teams chat (or use the Copy button). Colab shows "This notebook was not authored by Google" the first time: click "Run anyway". Check before the session that steps 2 and 3 match how your notebook works (single Run button vs Runtime > Run all; where to paste). The placeholder labels on the right are illustrative. Note: a Colab notebook runs on Google's cloud, not on the laptop, so the text does leave the computer. Fine for practice text; for real personal data, use an IT-approved tool. Have them mask the Ramesh Kumar letter from the earlier slide.</aside>
+  <aside class="notes">Paste the notebook link and the sample resume link in the Teams chat. The sample resume is at samples/sample_resume.pdf on the deck's site (made-up data). Step 7 saves masked PDFs inside Colab, not on the laptop: to keep one, open the folder icon on Colab's left sidebar and download it. Colab runs on Google's cloud, so the file does leave the computer. Fine for the sample; real CVs need an IT-approved tool.</aside>
   <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Masking tool</div></div>
+</section>
+
+<!-- D6 ─ Spot what it missed -->
+<section class="slide">
+  <div class="act">Activity · Spot what the tool missed</div>
+  <h1 style="font-size:38px">Check Step 6. What's still visible?</h1>
+  <div class="rule" style="margin-bottom:20px"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:start">
+    <div>
+      <div class="lbl">Before</div>
+      <div class="samplebox" style="font-size:13.5px;line-height:1.7">Rohan Mehta<br>rohan.mehta.demo@example.com | +91 98765 43210<br>21 Park Street, Kolkata 700016<br>Date of Birth: 14/03/1992 | Aadhaar: 1234 5678 9012 | PAN: ABCDE1234F<br>Site O&amp;M engineer with 8 years… Reported to Anita Sharma…<br>EXPERIENCE<br>Senior O&amp;M Engineer…<br>B.Tech Electrical…</div>
+    </div>
+    <div>
+      <div class="lbl">After (actual output)</div>
+      <div class="samplebox" style="font-size:13.5px;line-height:1.7">[NAME]<br>[EMAIL] | +91 [PHONE]<br>[ADDRESS]<span class="flagable" data-win="1">700016</span><br>[DATE_OF_BIRTH] | Aadhaar: <span class="flagable" data-win="1">1234 5678 9012</span> | PAN: <span class="flagable" data-win="1">ABCDE1234F</span><br>…with <span class="flagable" data-win="2">[ADDRESS]</span>&amp;M Engineer…<br><span class="flagable" data-win="2">[URL]</span> Electrical…</div>
+      <div style="margin-top:10px;display:flex;gap:14px;align-items:center"><div class="timer" data-sec="60">1:00</div><span class="muted" style="font-size:15px">Type what you spot</span></div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:16px">
+    <p class="frag" data-f="1" style="font-size:18px;margin:0"><span class="red"><b>Missed:</b></span> Aadhaar, PAN, PIN code</p>
+    <p class="frag" data-f="2" style="font-size:18px;margin:0"><span class="amber" style="color:var(--amber)"><b>Over-masked:</b></span> the Experience heading, and "B.Tech"</p>
+  </div>
+  <p class="frag" data-f="3" style="font-size:24px;margin-top:18px">Masking tools help. <span class="cyan">They don't replace your eyes.</span></p>
+  <aside class="notes">This is the real output of the notebook on the sample resume. It was built for US-style resumes, so it doesn't know Aadhaar, PAN or 6-digit PIN codes. It also missed "Anita Sharma" (a manager's name in the body text) and swallowed part of the Summary plus the Experience heading into [ADDRESS] ("St"/"Dr"-style street words). "B.Tech" became [URL] because ".tech" looks like a web domain. Lesson: always read the masked text before you paste it into an AI tool. Ties back to the traffic light: treat the tool's output as amber.</aside>
+  <div class="foot"><div class="brand"><img src="img/logo.png" alt="">EASTWAYAI</div><div>Verify the masking</div></div>
 </section>
 
 <!-- A17 ─ Module 2 divider -->
